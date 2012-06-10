@@ -21,6 +21,10 @@
 #include "folly/Range.h"
 #include "folly/Likely.h"
 #include "folly/Conv.h"
+#include <boost/preprocessor.hpp>
+#define JRB_FORWARD(z,n,data) std::forward<BOOST_PP_CAT(Arg,n)>(BOOST_PP_CAT(arg,n))
+
+
 
 namespace folly {
 
@@ -69,27 +73,37 @@ struct FormatArg {
   //    error(std::forward<Args>(args)...);
   //  }
   //}
-
-    template <typename Arg0>
-  void enforce(bool v, Arg0&& arg0) const {
-    if (UNLIKELY(!v)) {
-      error(std::forward<Arg0>(arg0));
-    }
-  }   
-  template <typename Arg0, typename Arg1>
-  void enforce(bool v, Arg0&& arg0, Arg1&& arg1) const {
-    if (UNLIKELY(!v)) {
-      error(std::forward<Arg0>(arg0),std::forward<Arg1>(arg1));
-    }
+  #define BOOST_PP_LOCAL_MACRO(N) \
+     template <BOOST_PP_ENUM_PARAMS(N,class Arg)> \
+  void enforce(bool v BOOST_PP_ENUM_TRAILING_BINARY_PARAMS(N, Arg, &&arg ) ) const { \
+    if (UNLIKELY(!v)) { \
+      error(BOOST_PP_ENUM(N,JRB_FORWARD,unused) ); \
+    } \
   }
+   /**/
+
+#define BOOST_PP_LOCAL_LIMITS (1, 5)
+
+#include BOOST_PP_LOCAL_ITERATE()
+
+#undef BOOST_PP_LOCAL_MACRO
+#undef BOOST_PP_LOCAL_LIMITS
+
 
   //template <typename... Args>
   //void  __declspec(noreturn) error(Args&&... args) const;
+    #define BOOST_PP_LOCAL_MACRO(N) \
+	template <BOOST_PP_ENUM_PARAMS(N, class Arg)> \
+  void  __declspec(noreturn) error(BOOST_PP_ENUM_BINARY_PARAMS(N, Arg, &&arg)) const; 
+   /**/
 
-    template <typename Arg0>
-  void  __declspec(noreturn) error(Arg0&& arg0) const;
-    template <typename Arg0,typename Arg1>
-  void  __declspec(noreturn) error(Arg0&& arg0, Arg1&& arg1) const;
+#define BOOST_PP_LOCAL_LIMITS (1, 5)
+
+#include BOOST_PP_LOCAL_ITERATE()
+
+#undef BOOST_PP_LOCAL_MACRO
+#undef BOOST_PP_LOCAL_LIMITS
+
 
   /**
    * Full argument string, as passed in to the constructor.
@@ -162,6 +176,11 @@ struct FormatArg {
   template <bool emptyOk/*=false*/>
   StringPiece splitKey();
 
+  StringPiece splitKey(){return splitKey<false>();}
+
+
+  
+
   /**
    * Is the entire key empty?
    */
@@ -210,18 +229,21 @@ struct FormatArg {
 //      std::forward<Args>(args)...));
 //}
 
-template <typename Arg0>
-inline void FormatArg::error(Arg0&& arg0) const {
-  throw std::invalid_argument(to<std::string>(
-      "folly::format: invalid format argument {", fullArgString, "}: ",
-      std::forward<Arg0>(arg0)));
+    #define BOOST_PP_LOCAL_MACRO(N) \
+template <BOOST_PP_ENUM_PARAMS(N,typename Arg)> \
+inline void FormatArg::error(BOOST_PP_ENUM_BINARY_PARAMS(N,Arg,&&arg)) const { \
+  throw std::invalid_argument(to<std::string>( \
+      "folly::format: invalid format argument {", fullArgString, "}: ", \
+      BOOST_PP_ENUM(N,JRB_FORWARD,unused))); \
 }
-template <typename Arg0,typename Arg1>
-inline void FormatArg::error(Arg0&& arg0,Arg1&& arg1) const {
-  throw std::invalid_argument(to<std::string>(
-      "folly::format: invalid format argument {", fullArgString, "}: ",
-      std::forward<Arg0>(arg0),std::forward<Arg1>(arg1)));
-}
+   /**/
+
+#define BOOST_PP_LOCAL_LIMITS (1, 5)
+
+#include BOOST_PP_LOCAL_ITERATE()
+
+#undef BOOST_PP_LOCAL_MACRO
+#undef BOOST_PP_LOCAL_LIMITS
 
 template <bool emptyOk>
 inline StringPiece FormatArg::splitKey() {

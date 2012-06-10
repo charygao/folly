@@ -22,7 +22,7 @@
 #include <cstring>
 #include <stdexcept>
 #include <iterator>
-#include <glog/logging.h>
+//#include <glog/logging.h>
 
 #undef FOLLY_DEMANGLE
 #if defined(__GNUG__) && __GNUG__ >= 4
@@ -30,90 +30,93 @@
 # define FOLLY_DEMANGLE 1
 #endif
 
+	struct_rallocm rallocm;
+
 namespace folly {
-
 namespace {
-
-inline void stringPrintfImpl(std::string& output, const char* format,
-                             va_list args) {
-  // Tru to the space at the end of output for our output buffer.
-  // Find out write point then inflate its size temporarily to its
-  // capacity; we will later shrink it to the size needed to represent
-  // the formatted string.  If this buffer isn't large enough, we do a
-  // resize and try again.
-
-  const auto write_point = output.size();
-  auto remaining = output.capacity() - write_point;
-  output.resize(output.capacity());
-
-  va_list args_copy;
-  va_copy(args_copy, args);
-  int bytes_used = vsnprintf(&output[write_point], remaining, format,
-                             args_copy);
-  va_end(args_copy);
-  if (bytes_used < 0) {
-    throw std::runtime_error(
-      to<std::string>("Invalid format string; snprintf returned negative "
-                      "with format string: ", format));
-  } else if (bytes_used < remaining) {
-    // There was enough room, just shrink and return.
-    output.resize(write_point + bytes_used);
-  } else {
-    output.resize(write_point + bytes_used + 1);
-    remaining = bytes_used + 1;
-    va_list args_copy;
-    va_copy(args_copy, args);
-    bytes_used = vsnprintf(&output[write_point], remaining, format,
-                           args_copy);
-    va_end(args_copy);
-    if (bytes_used + 1 != remaining) {
-      throw std::runtime_error(
-        to<std::string>("vsnprint retry did not manage to work "
-                        "with format string: ", format));
-    }
-    output.resize(write_point + bytes_used);
-  }
-}
+	// va_copy does not exist in vc++. disable string printf
+//
+//inline void stringPrintfImpl(std::string& output, const char* format,
+//                             va_list args) {
+//  // Tru to the space at the end of output for our output buffer.
+//  // Find out write point then inflate its size temporarily to its
+//  // capacity; we will later shrink it to the size needed to represent
+//  // the formatted string.  If this buffer isn't large enough, we do a
+//  // resize and try again.
+//
+//
+//  const auto write_point = output.size();
+//  auto remaining = output.capacity() - write_point;
+//  output.resize(output.capacity());
+//
+//  va_list args_copy;
+//  va_copy(args_copy, args);
+//  int bytes_used = vsnprintf(&output[write_point], remaining, format,
+//                             args_copy);
+//  va_end(args_copy);
+//  if (bytes_used < 0) {
+//    throw std::runtime_error(
+//      to<std::string>("Invalid format string; snprintf returned negative "
+//                      "with format string: ", format));
+//  } else if (bytes_used < remaining) {
+//    // There was enough room, just shrink and return.
+//    output.resize(write_point + bytes_used);
+//  } else {
+//    output.resize(write_point + bytes_used + 1);
+//    remaining = bytes_used + 1;
+//    va_list args_copy;
+//    va_copy(args_copy, args);
+//    bytes_used = vsnprintf(&output[write_point], remaining, format,
+//                           args_copy);
+//    va_end(args_copy);
+//    if (bytes_used + 1 != remaining) {
+//      throw std::runtime_error(
+//        to<std::string>("vsnprint retry did not manage to work "
+//                        "with format string: ", format));
+//    }
+//    output.resize(write_point + bytes_used);
+//  }
+//}
 
 }  // anon namespace
-
-std::string stringPrintf(const char* format, ...) {
-  // snprintf will tell us how large the output buffer should be, but
-  // we then have to call it a second time, which is costly.  By
-  // guestimating the final size, we avoid the double snprintf in many
-  // cases, resulting in a performance win.  We use this constructor
-  // of std::string to avoid a double allocation, though it does pad
-  // the resulting string with nul bytes.  Our guestimation is twice
-  // the format string size, or 32 bytes, whichever is larger.  This
-  // is a hueristic that doesn't affect correctness but attempts to be
-  // reasonably fast for the most common cases.
-  std::string ret(std::max(32UL, strlen(format) * 2), '\0');
-  ret.resize(0);
-
-  va_list ap;
-  va_start(ap, format);
-  stringPrintfImpl(ret, format, ap);
-  va_end(ap);
-  return ret;
-}
+// Disabled by JRB
+//std::string stringPrintf(const char* format, ...) {
+//  // snprintf will tell us how large the output buffer should be, but
+//  // we then have to call it a second time, which is costly.  By
+//  // guestimating the final size, we avoid the double snprintf in many
+//  // cases, resulting in a performance win.  We use this constructor
+//  // of std::string to avoid a double allocation, though it does pad
+//  // the resulting string with nul bytes.  Our guestimation is twice
+//  // the format string size, or 32 bytes, whichever is larger.  This
+//  // is a hueristic that doesn't affect correctness but attempts to be
+//  // reasonably fast for the most common cases.
+//  std::string ret(std::max(32UL, strlen(format) * 2), '\0');
+//  ret.resize(0);
+//
+//  va_list ap;
+//  va_start(ap, format);
+//  stringPrintfImpl(ret, format, ap);
+//  va_end(ap);
+//  return ret;
+//}
 
 // Basic declarations; allow for parameters of strings and string
 // pieces to be specified.
-std::string& stringAppendf(std::string* output, const char* format, ...) {
-  va_list ap;
-  va_start(ap, format);
-  stringPrintfImpl(*output, format, ap);
-  va_end(ap);
-  return *output;
-}
+//std::string& stringAppendf(std::string* output, const char* format, ...) {
+//  va_list ap;
+//  va_start(ap, format);
+//  stringPrintfImpl(*output, format, ap);
+//  va_end(ap);
+//  return *output;
+//}
 
-void stringPrintf(std::string* output, const char* format, ...) {
-  output->clear();
-  va_list ap;
-  va_start(ap, format);
-  stringPrintfImpl(*output, format, ap);
-  va_end(ap);
-};
+//void stringPrintf(std::string* output, const char* format, ...) {
+//  output->clear();
+//  va_list ap;
+//  va_start(ap, format);
+//  stringPrintfImpl(*output, format, ap);
+//  va_end(ap);
+//};
 
 namespace {
 
@@ -190,7 +193,7 @@ std::string prettyPrint(double val, PrettyType type, bool addSpace) {
   double abs_val = fabs(val);
   for (int i = 0; suffixes[i].suffix; ++i) {
     if (abs_val >= suffixes[i].val) {
-      snprintf(buf, sizeof buf, "%.4g%s%s",
+      _snprintf(buf, sizeof buf, "%.4g%s%s",
                (suffixes[i].val ? (val / suffixes[i].val)
                                 : val),
                (addSpace ? " " : ""),
@@ -200,7 +203,7 @@ std::string prettyPrint(double val, PrettyType type, bool addSpace) {
   }
 
   // no suffix, we've got a tiny value -- just print it in sci-notation
-  snprintf(buf, sizeof buf, "%.4g", val);
+  _snprintf(buf, sizeof buf, "%.4g", val);
   return std::string(buf);
 }
 
@@ -225,7 +228,7 @@ fbstring errnoStr(int err) {
 #if (_POSIX_C_SOURCE >= 200112L || _XOPEN_SOURCE >= 600 || \
      !FOLLY_HAVE_FEATURES_H) && !_GNU_SOURCE
   // Using XSI-compatible strerror_r
-  int r = strerror_r(err, buf, sizeof(buf));
+  int r = strerror_s(buf, sizeof(buf),err);
 
   if (r == -1) {
     result = to<fbstring>(
@@ -303,7 +306,7 @@ size_t hexDumpLine(const void* ptr, size_t offset, size_t size,
   }
   line.append(16 - n, ' ');
   line.push_back('|');
-  DCHECK_EQ(line.size(), 78);
+ // DCHECK_EQ(line.size(), 78);
 
   return n;
 }

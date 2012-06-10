@@ -111,16 +111,16 @@ class ScopeGuardImpl : public ScopeGuardImplBase {
   }
 
 private:
-  void* operator new(size_t) = delete;
+  void* operator new(size_t);// = delete;
 
   void execute() JRBNOEXCEPT {
     try {
       function_();
     } catch (const std::exception& ex) {
-      LOG(FATAL) << "ScopeGuard cleanup function threw a " <<
-        typeid(ex).name() << "exception: " << ex.what();
+//      LOG(FATAL) << "ScopeGuard cleanup function threw a " <<
+//        typeid(ex).name() << "exception: " << ex.what();
     } catch (...) {
-      LOG(FATAL) << "ScopeGuard cleanup function threw a non-exception object";
+  //    LOG(FATAL) << "ScopeGuard cleanup function threw a non-exception object";
     }
   }
 

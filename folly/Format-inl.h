@@ -14,6 +14,9 @@
  * limitations under the License.
  */
 
+#define CHECK(x) x
+#define DCHECK_GT(x,y)if(!(x>y)) throw std::range_error("DCHECK_GT failed");
+
 #ifndef FOLLY_FORMAT_H_
 #error This file may only be included from Format.h.
 #endif
@@ -245,7 +248,7 @@ void formatString(StringPiece val, FormatArg& arg, FormatCallback& cb) {
     val.reset(val.data(), arg.precision);
   }
 
-  constexpr int padBufSize = 128;
+  const int padBufSize = 128;
   char padBuf[padBufSize];
 
   // Output padding, no more than padBufSize at once
@@ -305,41 +308,41 @@ void formatNumber(StringPiece val, int prefixLen, FormatArg& arg,
   format_value::formatString(val, arg, cb);
 }
 
-template <class FormatCallback, bool containerMode, class... Args>
-void formatFormatter(const Formatter<containerMode, Args...>& formatter,
-                     FormatArg& arg,
-                     FormatCallback& cb) {
-  if (arg.width == FormatArg::kDefaultWidth &&
-      arg.precision == FormatArg::kDefaultPrecision) {
-    // nothing to do
-    formatter(cb);
-  } else if (arg.align != FormatArg::Align::LEFT &&
-             arg.align != FormatArg::Align::DEFAULT) {
-    // We can only avoid creating a temporary string if we align left,
-    // as we'd need to know the size beforehand otherwise
-    format_value::formatString(formatter.fbstr(), arg, cb);
-  } else {
-    auto fn = [&arg, &cb] (StringPiece sp) mutable {
-      int sz = static_cast<int>(sp.size());
-      if (arg.precision != FormatArg::kDefaultPrecision) {
-        sz = std::min(arg.precision, sz);
-        sp.reset(sp.data(), sz);
-        arg.precision -= sz;
-      }
-      if (!sp.empty()) {
-        cb(sp);
-        if (arg.width != FormatArg::kDefaultWidth) {
-          arg.width = std::max(arg.width - sz, 0);
-        }
-      }
-    };
-    formatter(fn);
-    if (arg.width != FormatArg::kDefaultWidth && arg.width != 0) {
-      // Rely on formatString to do appropriate padding
-      format_value::formatString(StringPiece(), arg, cb);
-    }
-  }
-}
+//template <class FormatCallback, bool containerMode BOOST_PP_ENUM_TRAILING_PARAMS(N, class Arg)>
+//void formatFormatter(const BOOST_PP_CAT(Formatter,N)<containerMode BOOST_PP_ENUM_TRAILING_PARAMS(N , Arg)>& formatter,
+//                     FormatArg& arg,
+//                     FormatCallback& cb) {
+//  if (arg.width == FormatArg::kDefaultWidth &&
+//      arg.precision == FormatArg::kDefaultPrecision) {
+//    // nothing to do
+//    formatter(cb);
+//  } else if (arg.align != FormatArg::Align::LEFT &&
+//             arg.align != FormatArg::Align::DEFAULT) {
+//    // We can only avoid creating a temporary string if we align left,
+//    // as we'd need to know the size beforehand otherwise
+//    format_value::formatString(formatter.fbstr(), arg, cb);
+//  } else {
+//    auto fn = [&arg, &cb] (StringPiece sp) mutable {
+//      int sz = static_cast<int>(sp.size());
+//      if (arg.precision != FormatArg::kDefaultPrecision) {
+//        sz = std::min(arg.precision, sz);
+//        sp.reset(sp.data(), sz);
+//        arg.precision -= sz;
+//      }
+//      if (!sp.empty()) {
+//        cb(sp);
+//        if (arg.width != FormatArg::kDefaultWidth) {
+//          arg.width = std::max(arg.width - sz, 0);
+//        }
+//      }
+//    };
+//    formatter(fn);
+//    if (arg.width != FormatArg::kDefaultWidth && arg.width != 0) {
+//      // Rely on formatString to do appropriate padding
+//      format_value::formatString(StringPiece(), arg, cb);
+//    }
+//  }
+//}
 
 }  // namespace format_value
 
@@ -405,7 +408,7 @@ class FormatValue<
     // ,d: 26 bytes (including thousands separators!)
     // + nul terminator
     // + 3 for sign and prefix shenanigans (see below)
-    constexpr size_t valBufSize = 69;
+    const size_t valBufSize = 69;
     char valBuf[valBufSize];
     char* valBufBegin = nullptr;
     char* valBufEnd = nullptr;
@@ -534,6 +537,18 @@ class FormatValue<bool> {
   bool val_;
 };
 
+template<unsigned int a, unsigned int b>
+struct jrb_max2{
+	enum{value = a > b?a:b};
+
+};
+
+template<unsigned int a, unsigned int b, unsigned int c>
+struct jrb_max3{
+	enum{t = jrb_max2<a,b>::value};
+	enum{value = jrb_max2<t,c>::value};
+
+};
 // double
 template <>
 class FormatValue<double> {
@@ -562,11 +577,11 @@ class FormatValue<double> {
     bool done = false;
 
     // 2+: for null terminator and optional sign shenanigans.
-    char buf[2 + std::max({
-        (2 + DoubleToStringConverter::kMaxFixedDigitsBeforePoint +
-         DoubleToStringConverter::kMaxFixedDigitsAfterPoint),
-        (8 + DoubleToStringConverter::kMaxExponentialDigits),
-        (7 + DoubleToStringConverter::kMaxPrecisionDigits)})];
+    char buf[2 + jrb_max3<
+        2 + DoubleToStringConverter::kMaxFixedDigitsBeforePoint +
+         DoubleToStringConverter::kMaxFixedDigitsAfterPoint,
+        8 + DoubleToStringConverter::kMaxExponentialDigits,
+        7 + DoubleToStringConverter::kMaxPrecisionDigits>::value];
     StringBuilder builder(buf + 1, sizeof(buf) - 1);
 
     char plusSign;
@@ -1021,58 +1036,62 @@ class FormatValue<std::pair<A, B>> {
   const std::pair<A, B>& val_;
 };
 
-// Partial specialization of FormatValue for tuples
-template <class... Args>
-class FormatValue<std::tuple<Args...>> {
-  typedef std::tuple<Args...> Tuple;
- public:
-  explicit FormatValue(const Tuple& val) : val_(val) { }
+//// Partial specialization of FormatValue for tuples
+//template <class... Args>
+//class FormatValue<std::tuple<Args...>> {
+//  typedef std::tuple<Args...> Tuple;
+// public:
+//  explicit FormatValue(const Tuple& val) : val_(val) { }
+//
+//  template <class FormatCallback>
+//  void format(FormatArg& arg, FormatCallback& cb) const {
+//    int key = arg.splitIntKey();
+//    arg.enforce(key >= 0, "tuple index must be non-negative");
+//    doFormat(key, arg, cb);
+//  }
+//
+// private:
+//  static constexpr size_t valueCount = std::tuple_size<Tuple>::value;
+//
+//  template <size_t K, class Callback>
+//  typename std::enable_if<K == valueCount>::type
+//  doFormatFrom(size_t i, FormatArg& arg, Callback& cb) const {
+//    arg.enforce("tuple index out of range, max=", i);
+//  }
+//
+//  template <size_t K, class Callback>
+//  typename std::enable_if<(K < valueCount)>::type
+//  doFormatFrom(size_t i, FormatArg& arg, Callback& cb) const {
+//    if (i == K) {
+//      FormatValue<typename std::decay<
+//        typename std::tuple_element<K, Tuple>::type>::type>(
+//          std::get<K>(val_)).format(arg, cb);
+//    } else {
+//      doFormatFrom<K+1>(i, arg, cb);
+//    }
+//  }
+//
+//  template <class Callback>
+//  void doFormat(size_t i, FormatArg& arg, Callback& cb) const {
+//    return doFormatFrom<0>(i, arg, cb);
+//  }
+//
+//  const Tuple& val_;
+//};
 
-  template <class FormatCallback>
-  void format(FormatArg& arg, FormatCallback& cb) const {
-    int key = arg.splitIntKey();
-    arg.enforce(key >= 0, "tuple index must be non-negative");
-    doFormat(key, arg, cb);
-  }
-
- private:
-  static constexpr size_t valueCount = std::tuple_size<Tuple>::value;
-
-  template <size_t K, class Callback>
-  typename std::enable_if<K == valueCount>::type
-  doFormatFrom(size_t i, FormatArg& arg, Callback& cb) const {
-    arg.enforce("tuple index out of range, max=", i);
-  }
-
-  template <size_t K, class Callback>
-  typename std::enable_if<(K < valueCount)>::type
-  doFormatFrom(size_t i, FormatArg& arg, Callback& cb) const {
-    if (i == K) {
-      FormatValue<typename std::decay<
-        typename std::tuple_element<K, Tuple>::type>::type>(
-          std::get<K>(val_)).format(arg, cb);
-    } else {
-      doFormatFrom<K+1>(i, arg, cb);
-    }
-  }
-
-  template <class Callback>
-  void doFormat(size_t i, FormatArg& arg, Callback& cb) const {
-    return doFormatFrom<0>(i, arg, cb);
-  }
-
-  const Tuple& val_;
-};
-
-/**
- * Formatter objects can be appended to strings, and therefore they're
- * compatible with folly::toAppend and folly::to.
- */
-template <class Tgt, bool containerMode, class... Args>
-typename std::enable_if<
-   detail::IsSomeString<Tgt>::value>::type
-toAppend(const Formatter<containerMode, Args...>& value, Tgt * result) {
-  value.appendTo(*result);
-}
+///**
+// * Formatter objects can be appended to strings, and therefore they're
+// * compatible with folly::toAppend and folly::to.
+// */
+//template <class Tgt, bool containerMode, class... Args>
+//typename std::enable_if<
+//   detail::IsSomeString<Tgt>::value>::type
+//toAppend(const Formatter<containerMode, Args...>& value, Tgt * result) {
+//  value.appendTo(*result);
+//}
+#include <boost/preprocessor.hpp>
+#define BOOST_PP_ITERATION_LIMITS (1,5)
+#define BOOST_PP_FILENAME_1       "C:\Users\JRB.JRB-i5-2300\Documents\Visual Studio 11\Projects\folly-vc11\folly-vc11\format-inl-pp.hpp"
+#include BOOST_PP_ITERATE()
 
 }  // namespace folly

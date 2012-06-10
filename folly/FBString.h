@@ -978,13 +978,35 @@ public:
     assign(str, pos, n);
   }
 
-  /* implicit */ basic_fbstring(const value_type* s, const A& a = A())
-      : store_(s, s ? traits_type::length(s) : ({
-          basic_fbstring<char> err = __PRETTY_FUNCTION__;
+
+  //basic_fbstring(const value_type* s, const allocator_type& a =
+	 // allocator_type() 
+	 // )
+  //    : store_(s, s ? traits_type::length(s) : ({
+  //        basic_fbstring<char> err = __PRETTY_FUNCTION__;
+  //        err += ": null pointer initializer not valid";
+  //        std::__throw_logic_error(err.c_str());
+  //        0;
+  //    })) {
+  //}
+
+  private:
+  size_type jrb_assure_nonnull_len(const value_type*s){
+	  if(s){
+		  traits_type::length(s);
+	  }else{
+		  basic_fbstring<char> err ;
           err += ": null pointer initializer not valid";
-          std::__throw_logic_error(err.c_str());
-          0;
-      })) {
+          throw std::logic_error(err.c_str());
+
+	  return 0;
+	  }
+  }
+  public:
+    basic_fbstring(const value_type* s, const allocator_type& a =
+	  allocator_type() 
+	  )
+      : store_(s, jrb_assure_nonnull_len(s)) {
   }
 
   basic_fbstring(const value_type* s, size_type n, const A& a = A())
@@ -1162,9 +1184,12 @@ public:
   }
 
   size_type capacity() const { return store_.capacity(); }
+  private:
+	  static void jrb_throw_length_error(const char* s){throw std::length_error(s);}
+	  public:
 
   void reserve(size_type res_arg = 0) {
-    enforce(res_arg <= max_size(), std::__throw_length_error, "");
+    enforce(res_arg <= max_size(), jrb_throw_length_error, "");
     store_.reserve(res_arg);
   }
 

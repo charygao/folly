@@ -162,31 +162,41 @@ template <class T> struct IsRelocatable : boost::mpl::not_<boost::is_class<T> >
  * although that is not guaranteed by the standard.
  */
 #include <functional>
-namespace std {
 
-template <class T, class U>
-  struct pair;
-#ifndef _GLIBCXX_USE_FB
-template <class T, class R, class A>
-  class basic_string;
-#else
-template <class T, class R, class A, class S>
-  class basic_string;
-#endif
-template <class T, class A>
-  class vector;
-template <class T, class A>
-  class deque;
-template <class T, class A>
-  class list;
-template <class T, class C, class A>
-  class set;
-template <class K, class V, class C, class A>
-  class map;
-template <class T>
-  class shared_ptr;
+//namespace std {
+//
+//template <class T, class U>
+//  struct pair;
+//#ifndef _GLIBCXX_USE_FB
+//template <class T, class R, class A>
+//  class basic_string;
+//#else
+//template <class T, class R, class A, class S>
+//  class basic_string;
+//#endif
+//template <class T, class A>
+//  class vector;
+//template <class T, class A>
+//  class deque;
+//template <class T, class A>
+//  class list;
+//template <class T, class C, class A>
+//  class set;
+//template <class K, class V, class C, class A>
+//  class map;
+//template <class T>
+//  class shared_ptr;
+//
+//}
 
-}
+#include<utility>
+#include <string>
+#include<vector>
+#include<deque>
+#include<list>
+#include<set>
+#include<map>
+#include<memory>
 
 namespace boost {
 

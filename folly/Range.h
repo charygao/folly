@@ -31,6 +31,10 @@
 //#include <bits/c++config.h>
 #include "folly/Traits.h"
 
+
+#define CHECK_LE(a,b) if(!(a<=b))throw std::out_of_range("CHECK_LE failed")
+#define CHECK_GT(a,b) if(!(a>b))throw std::out_of_range("CHECK_GT failed")
+
 namespace folly {
 
 template <class T> class Range;

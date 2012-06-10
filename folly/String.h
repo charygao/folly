@@ -117,16 +117,16 @@ String cUnescape(StringPiece str, bool strict = true) {
  * resulting string, and the second appends the produced characters to
  * the specified string and returns a reference to it.
  */
-std::string stringPrintf(const char* format, ...)
-;//JRBMOD  __attribute__ ((format (printf, 1, 2)));
-
-/** Similar to stringPrintf, with different signiture.
-  */
-void stringPrintf(std::string* out, const char* fmt, ...)
- ;//JRBMOD __attribute__ ((format (printf, 2, 3)));
-
-std::string& stringAppendf(std::string* output, const char* format, ...)
-;//JRBMOD  __attribute__ ((format (printf, 2, 3)));
+//std::string stringPrintf(const char* format, ...)
+//;//JRBMOD  __attribute__ ((format (printf, 1, 2)));
+//
+///** Similar to stringPrintf, with different signiture.
+//  */
+//void stringPrintf(std::string* out, const char* fmt, ...)
+// ;//JRBMOD __attribute__ ((format (printf, 2, 3)));
+//
+//std::string& stringAppendf(std::string* output, const char* format, ...)
+//;//JRBMOD  __attribute__ ((format (printf, 2, 3)));
 
 /*
  * A pretty-printer for numbers that appends suffixes of units of the

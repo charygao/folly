@@ -64,13 +64,23 @@ namespace folly {
 
 #include <new>
 
+
+
 /**
  * Declare rallocm() and malloc_usable_size() as weak symbols.  It
  * will be provided by jemalloc if we are using jemalloc, or it will
  * be NULL if we are using another malloc implementation.
  */
-inline int rallocm(void**, size_t*, size_t, size_t, int){assert(0);}
 
+// do not have weak symbols in vc
+//inline int rallocm(void**, size_t*, size_t, size_t, int){assert(0);return 0;}
+
+struct struct_rallocm{
+	int operator()(void**, size_t*, size_t, size_t, int){assert(0);return 0;}
+	operator void*(){return 0;}
+};
+
+extern struct_rallocm rallocm;
 /**
  * Define the ALLOCM_SUCCESS, ALLOCM_ZERO, and ALLOCM_NO_MOVE constants
  * normally provided by jemalloc.  We define them so that we don't have to

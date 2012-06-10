@@ -64,7 +64,7 @@ Formatter3<false, Arg0,Arg1,Arg2> format(StringPiece fmt, Arg0&& arg0,Arg1&& arg
 
 
 template <class C>
-Formatter<true, C> vformat(StringPiece fmt, C&& container);
+Formatter1<true, C> vformat1(StringPiece fmt, C&& container);
 template <class T, class Enable=void> class FormatValue;
 
 /**
@@ -205,8 +205,8 @@ template <class T, class Enable=void> class FormatValue;
  * but the latter is cleaner.
  */
 template <class Container>
-Formatter<true, Container> vformat(StringPiece fmt, Container&& container) {
-  return Formatter<true, Container>(
+Formatter1<true, Container> vformat(StringPiece fmt, Container&& container) {
+  return Formatter1<true, Container>(
       fmt, std::forward<Container>(container));
 }
 
