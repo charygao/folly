@@ -19,6 +19,11 @@
  *
  * @author Jordan DeLong <delong.j@fb.com>
  */
+
+// Modified by John R. Bandela
+#define JRBNOEXCEPT
+
+
 #ifndef FOLLY_SMALL_VECTOR_H_
 #define FOLLY_SMALL_VECTOR_H_
 
@@ -472,9 +477,9 @@ public:
     *this = std::move(o);
   }
 
-  small_vector(std::initializer_list<value_type> il) {
-    constructImpl(il.begin(), il.end(), std::false_type());
-  }
+  //small_vector(std::initializer_list<value_type> il) {
+  //  constructImpl(il.begin(), il.end(), std::false_type());
+  //}
 
   explicit small_vector(size_type n, value_type const& t = value_type()) {
     doConstruct(n, t);
@@ -658,18 +663,44 @@ public:
     this->setSize(sz);
   }
 
-  value_type* data() noexcept {
+  value_type* data() JRBNOEXCEPT {
     return this->isExtern() ? u.heap() : u.buffer();
   }
 
-  value_type const* data() const noexcept {
+  value_type const* data() const JRBNOEXCEPT {
     return this->isExtern() ? u.heap() : u.buffer();
   }
 
-  template<class ...Args>
-  iterator emplace(const_iterator p, Args&&... args) {
+  //template<class ...Args>
+  //iterator emplace(const_iterator p, Args&&... args) {
+  //  if (p == cend()) {
+  //    emplace_back(std::forward<Args>(args)...);
+  //    return end() - 1;
+  //  }
+
+  //  /*
+  //   * We implement emplace at places other than at the back with a
+  //   * temporary for exception safety reasons.  It is possible to
+  //   * avoid having to do this, but it becomes hard to maintain the
+  //   * basic exception safety guarantee (unless you respond to a copy
+  //   * constructor throwing by clearing the whole vector).
+  //   *
+  //   * The reason for this is that otherwise you have to destruct an
+  //   * element before constructing this one in its place---if the
+  //   * constructor throws, you either need a nothrow default
+  //   * constructor or a nothrow copy/move to get something back in the
+  //   * "gap", and the vector requirements don't guarantee we have any
+  //   * of these.  Clearing the whole vector is a legal response in
+  //   * this situation, but it seems like this implementation is easy
+  //   * enough and probably better.
+  //   */
+  //  return insert(p, value_type(std::forward<Args>(args)...));
+  //}
+  // JRB MOD
+    template<class Arg0>
+  iterator emplace(const_iterator p, Arg0 arg0) {
     if (p == cend()) {
-      emplace_back(std::forward<Args>(args)...);
+      emplace_back(std::forward<Args>(arg0));
       return end() - 1;
     }
 
@@ -689,8 +720,34 @@ public:
      * this situation, but it seems like this implementation is easy
      * enough and probably better.
      */
-    return insert(p, value_type(std::forward<Args>(args)...));
+    return insert(p, value_type(std::forward<Args>(arg0)));
   }
+    template<class Arg0, class Arg1>
+  iterator emplace(const_iterator p, Arg0 arg0, Arg1 arg1) {
+    if (p == cend()) {
+      emplace_back(std::forward<Args>(arg0,arg1));
+      return end() - 1;
+    }
+
+    /*
+     * We implement emplace at places other than at the back with a
+     * temporary for exception safety reasons.  It is possible to
+     * avoid having to do this, but it becomes hard to maintain the
+     * basic exception safety guarantee (unless you respond to a copy
+     * constructor throwing by clearing the whole vector).
+     *
+     * The reason for this is that otherwise you have to destruct an
+     * element before constructing this one in its place---if the
+     * constructor throws, you either need a nothrow default
+     * constructor or a nothrow copy/move to get something back in the
+     * "gap", and the vector requirements don't guarantee we have any
+     * of these.  Clearing the whole vector is a legal response in
+     * this situation, but it seems like this implementation is easy
+     * enough and probably better.
+     */
+    return insert(p, value_type(std::forward<Args>(arg0,arg1)));
+  }
+
 
   void reserve(size_type sz) {
     makeSize(sz);
@@ -715,10 +772,21 @@ public:
     tmp.swap(*this);
   }
 
-  template<class ...Args>
-  void emplace_back(Args&&... args) {
+  //template<class ...Args>
+  //void emplace_back(Args&&... args) {
+  //  // call helper function for static dispatch of special cases
+  //  emplaceBack(std::forward<Args>(args)...);
+  //}
+
+    template<class Arg0>
+  void emplace_back(Arg0&& arg0) {
     // call helper function for static dispatch of special cases
-    emplaceBack(std::forward<Args>(args)...);
+    emplaceBack(std::forward<Args>(arg0));
+  }
+    template<class Arg0,class Arg1>
+  void emplace_back(Arg0&& arg0, Arg1&& arg1) {
+    // call helper function for static dispatch of special cases
+    emplaceBack(std::forward<Args>(arg0,arg1));
   }
 
   void push_back(value_type&& t) {
@@ -790,9 +858,9 @@ public:
     return insertImpl(unconst(p), arg1, arg2, std::is_arithmetic<Arg>());
   }
 
-  iterator insert(const_iterator p, std::initializer_list<value_type> il) {
-    return insert(p, il.begin(), il.end());
-  }
+  //iterator insert(const_iterator p, std::initializer_list<value_type> il) {
+  //  return insert(p, il.begin(), il.end());
+  //}
 
   iterator erase(const_iterator q) {
     std::move(unconst(q) + 1, end(), unconst(q));
@@ -820,9 +888,9 @@ public:
     insert(end(), first, last);
   }
 
-  void assign(std::initializer_list<value_type> il) {
-    assign(il.begin(), il.end());
-  }
+  //void assign(std::initializer_list<value_type> il) {
+  //  assign(il.begin(), il.end());
+  //}
 
   void assign(size_type n, const value_type& t) {
     clear();
@@ -864,10 +932,23 @@ private:
    * This is doing the same like emplace_back, but we need this helper
    * to catch the special case - see the next overload function..
    */
-  template<class ...Args>
-  void emplaceBack(Args&&... args) {
+  //template<class ...Args>
+  //void emplaceBack(Args&&... args) {
+  //  makeSize(size() + 1);
+  //  new (end()) value_type(std::forward<Args>(args)...);
+  //  this->setSize(size() + 1);
+  //}
+
+	template<class Arg0>
+  void emplaceBack(Arg0&& arg0) {
     makeSize(size() + 1);
-    new (end()) value_type(std::forward<Args>(args)...);
+    new (end()) value_type(std::forward<Args>(arg0));
+    this->setSize(size() + 1);
+  }
+	template<class Arg0,class Arg1>
+  void emplaceBack(Arg0&& arg0,Arg1&& arg1) {
+    makeSize(size() + 1);
+    new (end()) value_type(std::forward<Arg0>(arg0),std::forward<Arg1>(arg1));
     this->setSize(size() + 1);
   }
 
@@ -1100,7 +1181,7 @@ private:
 #else
   typedef typename std::aligned_storage<
     sizeof(value_type) * MaxInline,
-    alignof(value_type)
+    __alignof(value_type)
   >::type InlineStorageType;
 #endif
 
@@ -1129,14 +1210,14 @@ private:
     PointerType pdata_;
     InlineStorageType storage_;
 
-    value_type* buffer() noexcept {
+    value_type* buffer() JRBNOEXCEPT {
       void* vp = &storage_;
       return static_cast<value_type*>(vp);
     }
-    value_type const* buffer() const noexcept {
+    value_type const* buffer() const JRBNOEXCEPT {
       return const_cast<Data*>(this)->buffer();
     }
-    value_type* heap() noexcept {
+    value_type* heap() JRBNOEXCEPT {
       if (kHasInlineCapacity || !detail::pointerFlagGet(pdata_.heap_)) {
         return static_cast<value_type*>(pdata_.heap_);
       }
@@ -1144,7 +1225,7 @@ private:
         detail::shiftPointer(
           detail::pointerFlagClear(pdata_.heap_), kHeapifyCapacitySize));
     }
-    value_type const* heap() const noexcept {
+    value_type const* heap() const JRBNOEXCEPT {
       return const_cast<Data*>(this)->heap();
     }
 

@@ -64,7 +64,7 @@
 // c++config.h:
 //   _LIBSTDCXX_FBSTRING - Set inside libstdc++.  This is useful to
 //      gate use inside fbcode v. libstdc++
-#include <bits/c++config.h>
+//#include <bits/c++config.h>
 
 #ifdef _LIBSTDCXX_FBSTRING
 

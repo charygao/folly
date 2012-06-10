@@ -34,13 +34,35 @@
 #include "folly/String.h"
 #include "folly/small_vector.h"
 #include "folly/FormatArg.h"
+#include <boost/preprocessor.hpp>
+
 
 namespace folly {
 
 // forward declarations
-template <bool containerMode, class... Args> class Formatter;
-template <class... Args>
-Formatter<false, Args...> format(StringPiece fmt, Args&&... args);
+//template <bool containerMode, class... Args> class Formatter;
+template <bool containerMode, class C> class Formatter;
+
+template <bool containerMode, class Arg0> class Formatter1;
+template <bool containerMode, class Arg0,class Arg1> class Formatter2;
+template <bool containerMode, class Arg0, class Arg1, class Arg2> class Formatter3;
+template <bool containerMode, class Arg0, class Arg1, class Arg2, class Arg3> class Formatter4;
+template <bool containerMode, class Arg0, class Arg1, class Arg2, class Arg3, class Arg4> class Formatter5;
+
+
+
+//template <class... Args>
+//Formatter<false, Args...> format(StringPiece fmt, Args&&... args);
+
+template <class Arg0>
+Formatter1<false, Arg0> format(StringPiece fmt, Arg0&& arg0);
+template <class Arg0,class Arg1>
+Formatter2<false, Arg0,Arg1> format(StringPiece fmt, Arg0&& arg0,Arg1&& arg1);
+template <class Arg0,class Arg1,class Arg2>
+Formatter3<false, Arg0,Arg1,Arg2> format(StringPiece fmt, Arg0&& arg0,Arg1&& arg1,Arg2&& arg2);
+
+
+
 template <class C>
 Formatter<true, C> vformat(StringPiece fmt, C&& container);
 template <class T, class Enable=void> class FormatValue;
@@ -53,115 +75,122 @@ template <class T, class Enable=void> class FormatValue;
  * this directly, you have to use format(...) below.
  */
 
-template <bool containerMode, class... Args>
-class Formatter {
-  template <class... A>
-  friend Formatter<false, A...> format(StringPiece fmt, A&&... arg);
-  template <class C>
-  friend Formatter<true, C> vformat(StringPiece fmt, C&& container);
- public:
-  /**
-   * Append to output.  out(StringPiece sp) may be called (more than once)
-   */
-  template <class Output>
-  void operator()(Output& out) const;
+//template <bool containerMode, class... Args>
+//class Formatter {
+//  template <class... A>
+//  friend Formatter<false, A...> format(StringPiece fmt, A&&... arg);
+//  template <class C>
+//  friend Formatter<true, C> vformat(StringPiece fmt, C&& container);
+// public:
+//  /**
+//   * Append to output.  out(StringPiece sp) may be called (more than once)
+//   */
+//  template <class Output>
+//  void operator()(Output& out) const;
+//
+//  /**
+//   * Append to a string.
+//   */
+//  template <class Str>
+//  typename std::enable_if<detail::IsSomeString<Str>::value>::type
+//  appendTo(Str& str) const {
+//    auto appender = [&str] (StringPiece s) { str.append(s.data(), s.size()); };
+//    (*this)(appender);
+//  }
+//
+//  /**
+//   * Conversion to string
+//   */
+//  std::string str() const {
+//    std::string s;
+//    appendTo(s);
+//    return s;
+//  }
+//
+//  /**
+//   * Conversion to fbstring
+//   */
+//  fbstring fbstr() const {
+//    fbstring s;
+//    appendTo(s);
+//    return s;
+//  }
+//
+// private:
+//  explicit Formatter(StringPiece str, Args&&... args);
+//
+//  // Not copyable
+//  Formatter(const Formatter&) = delete;
+//  Formatter& operator=(const Formatter&) = delete;
+//
+//  // Movable, but the move constructor and assignment operator are private,
+//  // for the exclusive use of format() (below).  This way, you can't create
+//  // a Formatter object, but can handle references to it (for streaming,
+//  // conversion to string, etc) -- which is good, as Formatter objects are
+//  // dangerous (they hold references, possibly to temporaries)
+//  Formatter(Formatter&&) = default;
+//  Formatter& operator=(Formatter&&) = default;
+//
+//  typedef std::tuple<FormatValue<
+//      typename std::decay<Args>::type>...> ValueTuple;
+//  static constexpr size_t valueCount = std::tuple_size<ValueTuple>::value;
+//
+//  template <size_t K, class Callback>
+//  typename std::enable_if<K == valueCount>::type
+//  doFormatFrom(size_t i, FormatArg& arg, Callback& cb) const {
+//    arg.error("argument index out of range, max=", i);
+//  }
+//
+//  template <size_t K, class Callback>
+//  typename std::enable_if<(K < valueCount)>::type
+//  doFormatFrom(size_t i, FormatArg& arg, Callback& cb) const {
+//    if (i == K) {
+//      std::get<K>(values_).format(arg, cb);
+//    } else {
+//      doFormatFrom<K+1>(i, arg, cb);
+//    }
+//  }
+//
+//  template <class Callback>
+//  void doFormat(size_t i, FormatArg& arg, Callback& cb) const {
+//    return doFormatFrom<0>(i, arg, cb);
+//  }
+//
+//  bool containerMode_;
+//  StringPiece str_;
+//  ValueTuple values_;
+//};
 
-  /**
-   * Append to a string.
-   */
-  template <class Str>
-  typename std::enable_if<detail::IsSomeString<Str>::value>::type
-  appendTo(Str& str) const {
-    auto appender = [&str] (StringPiece s) { str.append(s.data(), s.size()); };
-    (*this)(appender);
-  }
+#define BOOST_PP_ITERATION_LIMITS (1,5)
+#define BOOST_PP_FILENAME_1       "C:\Users\JRB.JRB-i5-2300\Documents\Visual Studio 11\Projects\folly-vc11\folly-vc11\formatter_pp.hpp"
+#include BOOST_PP_ITERATE()
 
-  /**
-   * Conversion to string
-   */
-  std::string str() const {
-    std::string s;
-    appendTo(s);
-    return s;
-  }
-
-  /**
-   * Conversion to fbstring
-   */
-  fbstring fbstr() const {
-    fbstring s;
-    appendTo(s);
-    return s;
-  }
-
- private:
-  explicit Formatter(StringPiece str, Args&&... args);
-
-  // Not copyable
-  Formatter(const Formatter&) = delete;
-  Formatter& operator=(const Formatter&) = delete;
-
-  // Movable, but the move constructor and assignment operator are private,
-  // for the exclusive use of format() (below).  This way, you can't create
-  // a Formatter object, but can handle references to it (for streaming,
-  // conversion to string, etc) -- which is good, as Formatter objects are
-  // dangerous (they hold references, possibly to temporaries)
-  Formatter(Formatter&&) = default;
-  Formatter& operator=(Formatter&&) = default;
-
-  typedef std::tuple<FormatValue<
-      typename std::decay<Args>::type>...> ValueTuple;
-  static constexpr size_t valueCount = std::tuple_size<ValueTuple>::value;
-
-  template <size_t K, class Callback>
-  typename std::enable_if<K == valueCount>::type
-  doFormatFrom(size_t i, FormatArg& arg, Callback& cb) const {
-    arg.error("argument index out of range, max=", i);
-  }
-
-  template <size_t K, class Callback>
-  typename std::enable_if<(K < valueCount)>::type
-  doFormatFrom(size_t i, FormatArg& arg, Callback& cb) const {
-    if (i == K) {
-      std::get<K>(values_).format(arg, cb);
-    } else {
-      doFormatFrom<K+1>(i, arg, cb);
-    }
-  }
-
-  template <class Callback>
-  void doFormat(size_t i, FormatArg& arg, Callback& cb) const {
-    return doFormatFrom<0>(i, arg, cb);
-  }
-
-  bool containerMode_;
-  StringPiece str_;
-  ValueTuple values_;
-};
-
+#undef BOOST_PP_ITERATION_LIMITS
+#undef BOOST_PP_FILENAME_1
+//#include "C:\Users\JRB.JRB-i5-2300\Documents\Visual Studio 11\Projects\folly-vc11\folly-vc11\Debug\test.i"
 /**
- * Formatter objects can be written to streams.
- */
-template<bool containerMode, class... Args>
-std::ostream& operator<<(std::ostream& out,
-                         const Formatter<containerMode, Args...>& formatter) {
-  auto writer = [&out] (StringPiece sp) { out.write(sp.data(), sp.size()); };
-  formatter(writer);
-  return out;
-}
-
-/**
- * Create a formatter object.
- *
- * std::string formatted = format("{} {}", 23, 42);
- * LOG(INFO) << format("{} {}", 23, 42);
- */
-template <class... Args>
-Formatter<false, Args...> format(StringPiece fmt, Args&&... args) {
-  return Formatter<false, Args...>(
-      fmt, std::forward<Args>(args)...);
-}
-
+// * Formatter objects can be written to streams.
+// */
+//template<bool containerMode, class... Args>
+//std::ostream& operator<<(std::ostream& out,
+//                         const Formatter<containerMode, Args...>& formatter) {
+//  auto writer = [&out] (StringPiece sp) { out.write(sp.data(), sp.size()); };
+//  formatter(writer);
+//  return out;
+//}
+//
+///**
+// * Create a formatter object.
+// *
+// * std::string formatted = format("{} {}", 23, 42);
+// * LOG(INFO) << format("{} {}", 23, 42);
+// */
+//template <class... Args>
+//Formatter<false, Args...> format(StringPiece fmt, Args&&... args) {
+//  return Formatter<false, Args...>(
+//      fmt, std::forward<Args>(args)...);
+//}
+//
 /**
  * Create a formatter object that takes one argument (of container type)
  * and uses that container to get argument values from.
@@ -181,28 +210,28 @@ Formatter<true, Container> vformat(StringPiece fmt, Container&& container) {
       fmt, std::forward<Container>(container));
 }
 
-/**
- * Append formatted output to a string.
- *
- * std::string foo;
- * format(&foo, "{} {}", 42, 23);
- *
- * Shortcut for toAppend(format(...), &foo);
- */
-template <class Str, class... Args>
-typename std::enable_if<detail::IsSomeString<Str>::value>::type
-format(Str* out, StringPiece fmt, Args&&... args) {
-  format(fmt, std::forward<Args>(args)...).appendTo(*out);
-}
-
-/**
- * Append vformatted output to a string.
- */
-template <class Str, class Container>
-typename std::enable_if<detail::IsSomeString<Str>::value>::type
-vformat(Str* out, StringPiece fmt, Container&& container) {
-  vformat(fmt, std::forward<Container>(container)).appendTo(*out);
-}
+///**
+// * Append formatted output to a string.
+// *
+// * std::string foo;
+// * format(&foo, "{} {}", 42, 23);
+// *
+// * Shortcut for toAppend(format(...), &foo);
+// */
+//template <class Str, class... Args>
+//typename std::enable_if<detail::IsSomeString<Str>::value>::type
+//format(Str* out, StringPiece fmt, Args&&... args) {
+//  format(fmt, std::forward<Args>(args)...).appendTo(*out);
+//}
+//
+///**
+// * Append vformatted output to a string.
+// */
+//template <class Str, class Container>
+//typename std::enable_if<detail::IsSomeString<Str>::value>::type
+//vformat(Str* out, StringPiece fmt, Container&& container) {
+//  vformat(fmt, std::forward<Container>(container)).appendTo(*out);
+//}
 
 /**
  * Utilities for all format value specializations.
@@ -235,10 +264,10 @@ void formatNumber(StringPiece val, int prefixLen, FormatArg& arg,
  * formatString(fmt.str(), arg, cb); but avoids creating a temporary
  * string if possible.
  */
-template <class FormatCallback, bool containerMode, class... Args>
-void formatFormatter(const Formatter<containerMode, Args...>& formatter,
-                     FormatArg& arg,
-                     FormatCallback& cb);
+//template <class FormatCallback, bool containerMode, class... Args>
+//void formatFormatter(const Formatter<containerMode, Args...>& formatter,
+//                     FormatArg& arg,
+//                     FormatCallback& cb);
 
 }  // namespace format_value
 

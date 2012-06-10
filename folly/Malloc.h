@@ -17,6 +17,8 @@
 // Functions to provide smarter use of jemalloc, if jemalloc is being used.
 // http://www.canonware.com/download/jemalloc/jemalloc-latest/doc/jemalloc.html
 
+
+// Modified by John R. Bandela 6/7/2012 for vc11
 #ifndef FOLLY_MALLOC_H_
 #define FOLLY_MALLOC_H_
 
@@ -67,8 +69,7 @@ namespace folly {
  * will be provided by jemalloc if we are using jemalloc, or it will
  * be NULL if we are using another malloc implementation.
  */
-extern "C" int rallocm(void**, size_t*, size_t, size_t, int)
-__attribute__((weak));
+inline int rallocm(void**, size_t*, size_t, size_t, int){assert(0);}
 
 /**
  * Define the ALLOCM_SUCCESS, ALLOCM_ZERO, and ALLOCM_NO_MOVE constants

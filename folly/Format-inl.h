@@ -131,110 +131,110 @@ size_t uintToBinary(char* buffer, size_t bufLen, Uint v) {
 }  // namespace detail
 
 
-template <bool containerMode, class... Args>
-Formatter<containerMode, Args...>::Formatter(StringPiece str, Args&&... args)
-  : str_(str),
-    values_(FormatValue<typename std::decay<Args>::type>(
-        std::forward<Args>(args))...) {
-  static_assert(!containerMode || sizeof...(Args) == 1,
-                "Exactly one argument required in container mode");
-}
-
-template <bool containerMode, class... Args>
-template <class Output>
-void Formatter<containerMode, Args...>::operator()(Output& out) const {
-  auto p = str_.begin();
-  auto end = str_.end();
-
-  // Copy raw string (without format specifiers) to output;
-  // not as simple as we'd like, as we still need to translate "}}" to "}"
-  // and throw if we see any lone "}"
-  auto outputString = [&out] (StringPiece s) {
-    auto p = s.begin();
-    auto end = s.end();
-    while (p != end) {
-      auto q = static_cast<const char*>(memchr(p, '}', end - p));
-      if (!q) {
-        out(StringPiece(p, end));
-        break;
-      }
-      ++q;
-      out(StringPiece(p, q));
-      p = q;
-
-      if (p == end || *p != '}') {
-        throw std::invalid_argument(
-            "folly::format: single '}' in format string");
-      }
-      ++p;
-    }
-  };
-
-  int nextArg = 0;
-  bool hasDefaultArgIndex = false;
-  bool hasExplicitArgIndex = false;
-  while (p != end) {
-    auto q = static_cast<const char*>(memchr(p, '{', end - p));
-    if (!q) {
-      outputString(StringPiece(p, end));
-      break;
-    }
-    outputString(StringPiece(p, q));
-    p = q + 1;
-
-    if (p == end) {
-      throw std::invalid_argument(
-          "folly::format: '}' at end of format string");
-    }
-
-    // "{{" -> "{"
-    if (*p == '{') {
-      out(StringPiece(p, 1));
-      ++p;
-      continue;
-    }
-
-    // Format string
-    q = static_cast<const char*>(memchr(p, '}', end - p));
-    if (q == end) {
-      throw std::invalid_argument("folly::format: missing ending '}'");
-    }
-    FormatArg arg(StringPiece(p, q));
-    p = q + 1;
-
-    int argIndex = 0;
-    auto piece = arg.splitKey<true>();  // empty key component is okay
-    if (containerMode) {  // static
-      if (piece.empty()) {
-        arg.setNextIntKey(nextArg++);
-        hasDefaultArgIndex = true;
-      } else {
-        arg.setNextKey(piece);
-        hasExplicitArgIndex = true;
-      }
-    } else {
-      if (piece.empty()) {
-        argIndex = nextArg++;
-        hasDefaultArgIndex = true;
-      } else {
-        try {
-          argIndex = to<int>(piece);
-        } catch (const std::out_of_range& e) {
-          arg.error("argument index must be integer");
-        }
-        arg.enforce(argIndex >= 0, "argument index must be non-negative");
-        hasExplicitArgIndex = true;
-      }
-    }
-
-    if (hasDefaultArgIndex && hasExplicitArgIndex) {
-      throw std::invalid_argument(
-          "folly::format: may not have both default and explicit arg indexes");
-    }
-
-    doFormat(argIndex, arg, out);
-  }
-}
+//template <bool containerMode, class... Args>
+//Formatter<containerMode, Args...>::Formatter(StringPiece str, Args&&... args)
+//  : str_(str),
+//    values_(FormatValue<typename std::decay<Args>::type>(
+//        std::forward<Args>(args))...) {
+//  static_assert(!containerMode || sizeof...(Args) == 1,
+//                "Exactly one argument required in container mode");
+//}
+//
+//template <bool containerMode, class... Args>
+//template <class Output>
+//void Formatter<containerMode, Args...>::operator()(Output& out) const {
+//  auto p = str_.begin();
+//  auto end = str_.end();
+//
+//  // Copy raw string (without format specifiers) to output;
+//  // not as simple as we'd like, as we still need to translate "}}" to "}"
+//  // and throw if we see any lone "}"
+//  auto outputString = [&out] (StringPiece s) {
+//    auto p = s.begin();
+//    auto end = s.end();
+//    while (p != end) {
+//      auto q = static_cast<const char*>(memchr(p, '}', end - p));
+//      if (!q) {
+//        out(StringPiece(p, end));
+//        break;
+//      }
+//      ++q;
+//      out(StringPiece(p, q));
+//      p = q;
+//
+//      if (p == end || *p != '}') {
+//        throw std::invalid_argument(
+//            "folly::format: single '}' in format string");
+//      }
+//      ++p;
+//    }
+//  };
+//
+//  int nextArg = 0;
+//  bool hasDefaultArgIndex = false;
+//  bool hasExplicitArgIndex = false;
+//  while (p != end) {
+//    auto q = static_cast<const char*>(memchr(p, '{', end - p));
+//    if (!q) {
+//      outputString(StringPiece(p, end));
+//      break;
+//    }
+//    outputString(StringPiece(p, q));
+//    p = q + 1;
+//
+//    if (p == end) {
+//      throw std::invalid_argument(
+//          "folly::format: '}' at end of format string");
+//    }
+//
+//    // "{{" -> "{"
+//    if (*p == '{') {
+//      out(StringPiece(p, 1));
+//      ++p;
+//      continue;
+//    }
+//
+//    // Format string
+//    q = static_cast<const char*>(memchr(p, '}', end - p));
+//    if (q == end) {
+//      throw std::invalid_argument("folly::format: missing ending '}'");
+//    }
+//    FormatArg arg(StringPiece(p, q));
+//    p = q + 1;
+//
+//    int argIndex = 0;
+//    auto piece = arg.splitKey<true>();  // empty key component is okay
+//    if (containerMode) {  // static
+//      if (piece.empty()) {
+//        arg.setNextIntKey(nextArg++);
+//        hasDefaultArgIndex = true;
+//      } else {
+//        arg.setNextKey(piece);
+//        hasExplicitArgIndex = true;
+//      }
+//    } else {
+//      if (piece.empty()) {
+//        argIndex = nextArg++;
+//        hasDefaultArgIndex = true;
+//      } else {
+//        try {
+//          argIndex = to<int>(piece);
+//        } catch (const std::out_of_range& e) {
+//          arg.error("argument index must be integer");
+//        }
+//        arg.enforce(argIndex >= 0, "argument index must be non-negative");
+//        hasExplicitArgIndex = true;
+//      }
+//    }
+//
+//    if (hasDefaultArgIndex && hasExplicitArgIndex) {
+//      throw std::invalid_argument(
+//          "folly::format: may not have both default and explicit arg indexes");
+//    }
+//
+//    doFormat(argIndex, arg, out);
+//  }
+//}
 
 namespace format_value {
 

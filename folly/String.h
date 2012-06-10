@@ -118,15 +118,15 @@ String cUnescape(StringPiece str, bool strict = true) {
  * the specified string and returns a reference to it.
  */
 std::string stringPrintf(const char* format, ...)
-  __attribute__ ((format (printf, 1, 2)));
+;//JRBMOD  __attribute__ ((format (printf, 1, 2)));
 
 /** Similar to stringPrintf, with different signiture.
   */
 void stringPrintf(std::string* out, const char* fmt, ...)
-  __attribute__ ((format (printf, 2, 3)));
+ ;//JRBMOD __attribute__ ((format (printf, 2, 3)));
 
 std::string& stringAppendf(std::string* output, const char* format, ...)
-  __attribute__ ((format (printf, 2, 3)));
+;//JRBMOD  __attribute__ ((format (printf, 2, 3)));
 
 /*
  * A pretty-printer for numbers that appends suffixes of units of the

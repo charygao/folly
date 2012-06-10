@@ -23,7 +23,6 @@
 #include <boost/mpl/and.hpp>
 #include <boost/mpl/not.hpp>
 #include <memory>
-#include <bits/c++config.h>
 
 namespace folly {
 
@@ -162,11 +161,11 @@ template <class T> struct IsRelocatable : boost::mpl::not_<boost::is_class<T> >
  * are. Furthermore, all STL containers can be assumed to comply,
  * although that is not guaranteed by the standard.
  */
-
+#include <functional>
 namespace std {
 
 template <class T, class U>
-  class pair;
+  struct pair;
 #ifndef _GLIBCXX_USE_FB
 template <class T, class R, class A>
   class basic_string;
@@ -208,15 +207,17 @@ struct IsRelocatable<  std::pair<T, U> >
     : ::boost::mpl::and_< IsRelocatable<T>, IsRelocatable<U> > {};
 
 // Is T one of T1, T2, ..., Tn?
-template <class T, class... Ts>
+// Modified without variable templates
+struct jrb_null_type{};
+template <class T, class T1, class T2 = jrb_null_type, class T3 = jrb_null_type, class T4 = jrb_null_type, class T5 = jrb_null_type, class T6 = jrb_null_type, class T7 = jrb_null_type>
 struct IsOneOf {
-  enum { value = false };
+  enum { value = std::is_same<T, T1>::value || std::is_same<T, T2>::value|| std::is_same<T, T3>::value|| std::is_same<T, T4>::value|| std::is_same<T, T5>::value|| std::is_same<T, T6>::value|| std::is_same<T, T7>::value };;
 };
 
-template <class T, class T1, class... Ts>
-struct IsOneOf<T, T1, Ts...> {
-  enum { value = std::is_same<T, T1>::value || IsOneOf<T, Ts...>::value };
-};
+//template <class T, class T1, class... Ts>
+//struct IsOneOf<T, T1, Ts...> {
+//  enum { value = std::is_same<T, T1>::value || IsOneOf<T, Ts...>::value };
+//};
 
 } // namespace folly
 

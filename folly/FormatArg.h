@@ -63,15 +63,34 @@ struct FormatArg {
    * message will contain the argument string as well as any passed-in
    * arguments to enforce, formatted using folly::to<std::string>.
    */
-  template <typename... Args>
-  void enforce(bool v, Args&&... args) const {
+  //template <typename... Args>
+  //void enforce(bool v, Args&&... args) const {
+  //  if (UNLIKELY(!v)) {
+  //    error(std::forward<Args>(args)...);
+  //  }
+  //}
+
+    template <typename Arg0>
+  void enforce(bool v, Arg0&& arg0) const {
     if (UNLIKELY(!v)) {
-      error(std::forward<Args>(args)...);
+      error(std::forward<Arg0>(arg0));
+    }
+  }   
+  template <typename Arg0, typename Arg1>
+  void enforce(bool v, Arg0&& arg0, Arg1&& arg1) const {
+    if (UNLIKELY(!v)) {
+      error(std::forward<Arg0>(arg0),std::forward<Arg1>(arg1));
     }
   }
 
-  template <typename... Args>
-  void error(Args&&... args) const __attribute__((noreturn));
+  //template <typename... Args>
+  //void  __declspec(noreturn) error(Args&&... args) const;
+
+    template <typename Arg0>
+  void  __declspec(noreturn) error(Arg0&& arg0) const;
+    template <typename Arg0,typename Arg1>
+  void  __declspec(noreturn) error(Arg0&& arg0, Arg1&& arg1) const;
+
   /**
    * Full argument string, as passed in to the constructor.
    */
@@ -80,7 +99,7 @@ struct FormatArg {
   /**
    * Fill
    */
-  static constexpr char kDefaultFill = '\0';
+  static const char kDefaultFill = '\0';
   char fill;
 
   /**
@@ -121,26 +140,26 @@ struct FormatArg {
   /**
    * Field width
    */
-  static constexpr int kDefaultWidth = -1;
+  static const int kDefaultWidth = -1;
   int width;
 
   /**
    * Precision
    */
-  static constexpr int kDefaultPrecision = -1;
+  static const int kDefaultPrecision = -1;
   int precision;
 
   /**
    * Presentation
    */
-  static constexpr char kDefaultPresentation = '\0';
+  static const char kDefaultPresentation = '\0';
   char presentation;
 
   /**
    * Split a key component from "key", which must be non-empty (an exception
    * is thrown otherwise).
    */
-  template <bool emptyOk=false>
+  template <bool emptyOk/*=false*/>
   StringPiece splitKey();
 
   /**
@@ -184,11 +203,24 @@ struct FormatArg {
   NextKeyMode nextKeyMode_;
 };
 
-template <typename... Args>
-inline void FormatArg::error(Args&&... args) const {
+//template <typename... Args>
+//inline void FormatArg::error(Args&&... args) const {
+//  throw std::invalid_argument(to<std::string>(
+//      "folly::format: invalid format argument {", fullArgString, "}: ",
+//      std::forward<Args>(args)...));
+//}
+
+template <typename Arg0>
+inline void FormatArg::error(Arg0&& arg0) const {
   throw std::invalid_argument(to<std::string>(
       "folly::format: invalid format argument {", fullArgString, "}: ",
-      std::forward<Args>(args)...));
+      std::forward<Arg0>(arg0)));
+}
+template <typename Arg0,typename Arg1>
+inline void FormatArg::error(Arg0&& arg0,Arg1&& arg1) const {
+  throw std::invalid_argument(to<std::string>(
+      "folly::format: invalid format argument {", fullArgString, "}: ",
+      std::forward<Arg0>(arg0),std::forward<Arg1>(arg1)));
 }
 
 template <bool emptyOk>

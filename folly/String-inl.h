@@ -277,7 +277,7 @@ template<class Delim, class String, class OutputType>
 void split(const Delim& delimiter,
            const String& input,
            fbvector<OutputType>& out,
-           bool ignoreEmpty = false) {
+           bool ignoreEmpty) {
   detail::internalSplit<OutputType>(
     detail::prepareDelim(delimiter),
     StringPiece(input),

@@ -257,7 +257,8 @@ public:
   typedef T* iterator;
   typedef const T* const_iterator;
   typedef size_t size_type;
-  typedef ssize_t difference_type;
+//  typedef ssize_t difference_type;
+  typedef ptrdiff_t  difference_type;
   // typedef typename allocator_traits<Allocator>::pointer pointer;
   // typedef typename allocator_traits<Allocator>::const_pointer const_pointer;
   typedef Allocator allocator_type;
@@ -330,9 +331,9 @@ public:
     o.b_ = o.e_ = o.z_ = 0;
   }
 
-  fbvector(std::initializer_list<T> il, const Allocator& = Allocator()) {
-    new(this) fbvector(il.begin(), il.end());
-  }
+  //fbvector(std::initializer_list<T> il, const Allocator& = Allocator()) {
+  //  new(this) fbvector(il.begin(), il.end());
+  //}
 
   ~fbvector() {
     // fbvector only works with relocatable objects. We insert this
@@ -357,10 +358,10 @@ public:
     return *this;
   }
 
-  fbvector& operator=(std::initializer_list<T> il) {
-    assign(il.begin(), il.end());
-    return *this;
-  }
+  //fbvector& operator=(std::initializer_list<T> il) {
+  //  assign(il.begin(), il.end());
+  //  return *this;
+  //}
 
   bool operator==(const fbvector& rhs) const {
     return size() == rhs.size() && std::equal(begin(), end(), rhs.begin());
@@ -472,9 +473,9 @@ public:
     temp.swap(*this);
   }
 
-  void assign(std::initializer_list<T> il) {
-    assign(il.begin(), il.end());
-  }
+  //void assign(std::initializer_list<T> il) {
+  //  assign(il.begin(), il.end());
+  //}
 
   allocator_type get_allocator() const {
     // whatevs
@@ -675,17 +676,62 @@ private:
   }
 
 public:
-// 23.3.6.4 modifiers:
-  template <class... Args>
-  void emplace_back(Args&&... args) {
+//// 23.3.6.4 modifiers:
+//  template <class... Args>
+//  void emplace_back(Args&&... args) {
+//    if (e_ == z_) {
+//      if (!reserve_in_place(size() + 1)) {
+//        reserve_with_move(computePushBackCapacity());
+//      }
+//    }
+//    new (e_) T(std::forward<Args>(args)...);
+//    ++e_;
+//  }
+
+	void emplace_back() {
+		if (e_ == z_) {
+			if (!reserve_in_place(size() + 1)) {
+				reserve_with_move(computePushBackCapacity());
+			}
+		}
+		new (e_) T();
+		++e_;
+	}
+
+  template <class Arg0>
+  void emplace_back(Arg0&& arg0) {
     if (e_ == z_) {
       if (!reserve_in_place(size() + 1)) {
         reserve_with_move(computePushBackCapacity());
       }
     }
-    new (e_) T(std::forward<Args>(args)...);
+    new (e_) T(std::forward<Args>(arg0));
     ++e_;
   }
+
+  template <class Arg0,class Arg1>
+  void emplace_back(Arg0&& arg0, Arg1&& arg1) {
+    if (e_ == z_) {
+      if (!reserve_in_place(size() + 1)) {
+        reserve_with_move(computePushBackCapacity());
+      }
+    }
+    new (e_) T(std::forward<Args>(arg0),std::forward<Args>(arg1));
+    ++e_;
+  }
+
+  template <class Arg0,class Arg1,class Arg2>
+  void emplace_back(Arg0&& arg0, Arg1&& arg1, Arg2&& arg2) {
+    if (e_ == z_) {
+      if (!reserve_in_place(size() + 1)) {
+        reserve_with_move(computePushBackCapacity());
+      }
+    }
+    new (e_) T(std::forward<Args>(arg0),std::forward<Args>(arg1),std::forward<Args>(arg2));
+    ++e_;
+  }
+
+
 
   void push_back(T x) {
     if (e_ == z_) {
@@ -854,9 +900,9 @@ public:
                       boost::is_arithmetic<InputIteratorOrNum>());
   }
 
-  iterator insert(const_iterator position, std::initializer_list<T> il) {
-    return insert(position, il.begin(), il.end());
-  }
+  //iterator insert(const_iterator position, std::initializer_list<T> il) {
+  //  return insert(position, il.begin(), il.end());
+  //}
 
   iterator erase(const_iterator position) {
     if (position == e_) return e_;

@@ -103,18 +103,18 @@ template <class T> struct IsSomeString {
          || std::is_same<T, fbstring>::value };
 };
 
-template <class T>
-const T& getLastElement(const T & v) {
-  return v;
-}
-
-template <class T, class... Ts>
-typename std::tuple_element<
-  sizeof...(Ts),
-  std::tuple<T, Ts...> >::type const&
-  getLastElement(const T& v, const Ts&... vs) {
-  return getLastElement(vs...);
-}
+//template <class T>
+//const T& getLastElement(const T & v) {
+//  return v;
+//}
+//
+//template <class T, class... Ts>
+//typename std::tuple_element<
+//  sizeof...(Ts),
+//  std::tuple<T, Ts...> >::type const&
+//  getLastElement(const T& v, const Ts&... vs) {
+//  return getLastElement(vs...);
+//}
 
 /*******************************************************************************
  * Conversions from integral types to string types.
@@ -342,16 +342,38 @@ toAppend(Src value, Tgt * result) {
 /**
  * Variadic conversion to string. Appends each element in turn.
  */
-template <class T, class... Ts>
-typename std::enable_if<sizeof...(Ts) >= 2
-  && detail::IsSomeString<
-  typename std::remove_pointer<
-    typename std::tuple_element<
-      sizeof...(Ts) - 1, std::tuple<Ts...>
-      >::type>::type>::value>::type
-toAppend(const T& v, const Ts&... vs) {
-  toAppend(v, detail::getLastElement(vs...));
-  toAppend(vs...);
+//template <class T, class... Ts>
+//typename std::enable_if<sizeof...(Ts) >= 2
+//  && detail::IsSomeString<
+//  typename std::remove_pointer<
+//    typename std::tuple_element<
+//      sizeof...(Ts) - 1, std::tuple<Ts...>
+//      >::type>::type>::value>::type
+//toAppend(const T& v, const Ts&... vs) {
+//  toAppend(v, detail::getLastElement(vs...));
+//  toAppend(vs...);
+//}
+//Modified by JRB
+
+template<class Tgt,class Src1, class Src2>
+void toAppend(Src1 v1, Src2 v2, Tgt* result){
+	toAppend(v1,result);
+	toAppend(v2,result);
+}
+
+template<class Tgt,class Src1, class Src2, class Src3>
+void toAppend(Src1 v1, Src2 v2, Src2 v3, Tgt* result){
+	toAppend(v1,result);
+	toAppend(v2,result);
+	toAppend(v3,result);
+}
+
+template<class Tgt,class Src1, class Src2, class Src3, class Src4>
+void toAppend(Src1 v1, Src2 v2, Src2 v3, Src2 v4, Tgt* result){
+	toAppend(v1,result);
+	toAppend(v2,result);
+	toAppend(v3,result);
+	toAppend(v4,result);
 }
 
 /**
@@ -366,12 +388,40 @@ toAppend(Tgt* result) {
  * to<SomeString>(v1, v2, ...) uses toAppend() (see below) as back-end
  * for all types.
  */
-template <class Tgt, class... Ts>
-typename std::enable_if<detail::IsSomeString<Tgt>::value, Tgt>::type
-to(const Ts&... vs) {
-  Tgt result;
-  toAppend(vs..., &result);
-  return result;
+//template <class Tgt, class... Ts>
+//typename std::enable_if<detail::IsSomeString<Tgt>::value, Tgt>::type
+//to(const Ts&... vs) {
+//  Tgt result;
+//  toAppend(vs..., &result);
+//  return result;
+//}
+//Modified by JRB
+template<class Tgt,class Src1>
+Tgt to(Src1 v1){
+	Tgt result;
+	toAppend(v1,&result);
+	return result;
+}
+template<class Tgt,class Src1, class Src2>
+Tgt to(Src1 v1, Src2 v2){
+	Tgt result;
+	toAppend(v1,v2,&result);
+	return result;
+}
+
+template<class Tgt,class Src1, class Src2, class Src3>
+Tgt to(Src1 v1, Src2 v2, Src3 v3){
+	Tgt result;
+	toAppend(v1,v2,v3,&result);
+	return result;
+}
+
+template<class Tgt,class Src1, class Src2, class Src3, class Src4>
+Tgt to(Src1 v1, Src2 v2, Src2 v3, Src2 v4){
+	Tgt result;
+	toAppend(v1,v2,v3,v4,&result);
+
+	return result;
 }
 
 /*******************************************************************************

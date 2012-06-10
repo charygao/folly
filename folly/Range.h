@@ -21,14 +21,14 @@
 #define FOLLY_RANGE_H_
 
 #include "folly/FBString.h"
-#include <glog/logging.h>
+//#include <glog/logging.h>
 #include <iostream>
 #include <string>
 #include <stdexcept>
 #include <boost/operators.hpp>
 #include <boost/utility/enable_if.hpp>
 #include <boost/type_traits.hpp>
-#include <bits/c++config.h>
+//#include <bits/c++config.h>
 #include "folly/Traits.h"
 
 namespace folly {

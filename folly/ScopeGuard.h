@@ -20,7 +20,7 @@
 #include <cstddef>
 #include <functional>
 #include <new>
-#include <glog/logging.h>
+//#include <glog/logging.h>
 
 #include "folly/Preprocessor.h"
 
@@ -67,9 +67,14 @@ namespace folly {
  *   and triendl.kj article:
  *     http://www.codeproject.com/KB/cpp/scope_guard.aspx
  */
+
+#define JRBNOEXCEPT
+
+
+
 class ScopeGuardImplBase {
  public:
-  void dismiss() noexcept {
+  void dismiss() JRBNOEXCEPT {
     dismissed_ = true;
   }
 
@@ -99,7 +104,7 @@ class ScopeGuardImpl : public ScopeGuardImplBase {
       function_(std::move(other.function_)) {
   }
 
-  ~ScopeGuardImpl() noexcept {
+  ~ScopeGuardImpl() JRBNOEXCEPT {
     if (!dismissed_) {
       execute();
     }
@@ -108,7 +113,7 @@ class ScopeGuardImpl : public ScopeGuardImplBase {
 private:
   void* operator new(size_t) = delete;
 
-  void execute() noexcept {
+  void execute() JRBNOEXCEPT {
     try {
       function_();
     } catch (const std::exception& ex) {
