@@ -21,6 +21,10 @@
  * @author Andrei Alexandrescu (andrei.alexandrescu@fb.com)
  */
 
+// Modified 6/10/2012
+// By John R. Bandela
+// All changes under Apache License 2.0 as above
+
 #ifndef FOLLY_BASE_CONV_H_
 #define FOLLY_BASE_CONV_H_
 
@@ -103,19 +107,6 @@ template <class T> struct IsSomeString {
   enum { value = std::is_same<T, std::string>::value
          || std::is_same<T, fbstring>::value };
 };
-
-//template <class T>
-//const T& getLastElement(const T & v) {
-//  return v;
-//}
-//
-//template <class T, class... Ts>
-//typename std::tuple_element<
-//  sizeof...(Ts),
-//  std::tuple<T, Ts...> >::type const&
-//  getLastElement(const T& v, const Ts&... vs) {
-//  return getLastElement(vs...);
-//}
 
 /*******************************************************************************
  * Conversions from integral types to string types.
@@ -354,7 +345,7 @@ toAppend(Src value, Tgt * result) {
 //  toAppend(v, detail::getLastElement(vs...));
 //  toAppend(vs...);
 //}
-//Modified by JRB
+// Below is variadic version using BOOST_PREPROCESSOR
 #define JRB_TO_APPEND(z,n,data) toAppend(BOOST_PP_CAT(v,n),result);
 #define BOOST_PP_LOCAL_MACRO(N) \
 template <BOOST_PP_ENUM_PARAMS(N,class T),class Tgt> \
@@ -362,52 +353,13 @@ typename std::enable_if< (N >= 2) \
   && detail::IsSomeString< Tgt>::value>::type \
 toAppend(BOOST_PP_ENUM_BINARY_PARAMS(N,const T,&v), Tgt* result ) { \
   BOOST_PP_REPEAT(N,JRB_TO_APPEND,unused); }
-   /**/
 
 #define BOOST_PP_LOCAL_LIMITS (2, 10)
 
 #include BOOST_PP_LOCAL_ITERATE()
 
 #undef BOOST_PP_LOCAL_MACRO
-//template<class Tgt,class Src1, class Src2>
-//void toAppend(Src1 v1, Src2 v2, Tgt* result){
-//	toAppend(v1,result);
-//	toAppend(v2,result);
-//}
-//
-//template<class Tgt,class Src1, class Src2, class Src3>
-//void toAppend(Src1 v1, Src2 v2, Src3 v3, Tgt* result){
-//	toAppend(v1,result);
-//	toAppend(v2,result);
-//	toAppend(v3,result);
-//}
-//
-//template<class Tgt,class Src1, class Src2, class Src3, class Src4>
-//void toAppend(Src1 v1, Src2 v2, Src3 v3, Src4 v4, Tgt* result){
-//	toAppend(v1,result);
-//	toAppend(v2,result);
-//	toAppend(v3,result);
-//	toAppend(v4,result);
-//}
-//
-//template<class Tgt,class Src1, class Src2, class Src3, class Src4,class Src5>
-//void toAppend(Src1 v1, Src2 v2, Src3 v3, Src4 v4, Src5 v5, Tgt* result){
-//	toAppend(v1,result);
-//	toAppend(v2,result);
-//	toAppend(v3,result);
-//	toAppend(v4,result);
-//	toAppend(v5,result);
-//}
-//
-//template<class Tgt,class Src1, class Src2, class Src3, class Src4,class Src5,class Src6>
-//void toAppend(Src1 v1, Src2 v2, Src3 v3, Src4 v4, Src5 v5,Src6 v6, Tgt* result){
-//	toAppend(v1,result);
-//	toAppend(v2,result);
-//	toAppend(v3,result);
-//	toAppend(v4,result);
-//	toAppend(v5,result);
-//	toAppend(v6,result);
-//}
+
 
 /**
  * Variadic base case: do nothing.
@@ -428,9 +380,8 @@ toAppend(Tgt* result) {
 //  toAppend(vs..., &result);
 //  return result;
 //}
-//Modified by JRB
+// Below is variadic version using BOOST_PREPROCESSOR
 
-#include <boost/preprocessor.hpp>
 
 #define BOOST_PP_LOCAL_MACRO(N) \
 template <class Tgt BOOST_PP_ENUM_TRAILING_PARAMS(N,class T)> \
@@ -446,34 +397,8 @@ to(BOOST_PP_ENUM_BINARY_PARAMS(N,const T, &v)) { \
 
 #include BOOST_PP_LOCAL_ITERATE()
 
+#undef BOOST_PP_LOCAL_MACRO
 
-//template<class Tgt,class Src1>
-//Tgt to(Src1 v1){
-//	Tgt result;
-//	toAppend(v1,&result);
-//	return result;
-//}
-//template<class Tgt,class Src1, class Src2>
-//Tgt to(Src1 v1, Src2 v2){
-//	Tgt result;
-//	toAppend(v1,v2,&result);
-//	return result;
-//}
-//
-//template<class Tgt,class Src1, class Src2, class Src3>
-//Tgt to(Src1 v1, Src2 v2, Src3 v3){
-//	Tgt result;
-//	toAppend(v1,v2,v3,&result);
-//	return result;
-//}
-//
-//template<class Tgt,class Src1, class Src2, class Src3, class Src4>
-//Tgt to(Src1 v1, Src2 v2, Src2 v3, Src2 v4){
-//	Tgt result;
-//	toAppend(v1,v2,v3,v4,&result);
-//
-//	return result;
-//}
 
 /*******************************************************************************
  * Conversions from string types to integral types.
