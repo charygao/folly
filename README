@@ -71,7 +71,7 @@ Dependencies
 	*format
 	*fbstring
 
-	for small_vector and fbvector emplace is kinda working but needs to be worked on
+	fbvector has not specifically tested but some of the others libraries rely on it and it seems to work
 
 	To build make sure folly is in the include directory
 	Make sure you have either built or included double-conversion cpp files
@@ -88,6 +88,8 @@ Dependencies
 		String.cpp
 		Unicode.cpp
 
+
+		Make sure you have _VARIADIC_MAX=10 in you compiler defines otherwise tuple will only be defined for 5 arguments and you will get weird errors
 		
 
 	Any suggestions/bugfixes welcome

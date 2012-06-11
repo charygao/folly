@@ -31,6 +31,9 @@
  * For more information and documentation see folly/docs/FBVector.md
  */
 
+// Modified 6/10/2012
+// By John R. Bandela
+// All changes under Apache License 2.0 as above
 #ifndef FOLLY_FBVECTOR_H_
 #define FOLLY_FBVECTOR_H_
 
@@ -46,6 +49,8 @@
 #include <boost/operators.hpp>
 #include <boost/utility/enable_if.hpp>
 #include <type_traits>
+#include <boost/preprocessor.hpp>
+#define JRB_FORWARD(z,n,data) std::forward<BOOST_PP_CAT(Arg,n)>(BOOST_PP_CAT(arg,n))
 
 namespace folly {
 /**
@@ -688,48 +693,37 @@ public:
 //    ++e_;
 //  }
 
-	void emplace_back() {
-		if (e_ == z_) {
-			if (!reserve_in_place(size() + 1)) {
-				reserve_with_move(computePushBackCapacity());
-			}
-		}
-		new (e_) T();
-		++e_;
-	}
+  void emplace_back() { 
+    if (e_ == z_) { 
+      if (!reserve_in_place(size() + 1)) { 
+        reserve_with_move(computePushBackCapacity()); 
+      } 
+    } 
+    new (e_) T(); \
+    ++e_; 
+  } 
 
-  template <class Arg0>
-  void emplace_back(Arg0&& arg0) {
-    if (e_ == z_) {
-      if (!reserve_in_place(size() + 1)) {
-        reserve_with_move(computePushBackCapacity());
-      }
-    }
-    new (e_) T(std::forward<Args>(arg0));
-    ++e_;
-  }
+	#define BOOST_PP_LOCAL_MACRO(N) \
+template <BOOST_PP_ENUM_PARAMS(N, class Arg)> \
+  void emplace_back(BOOST_PP_ENUM_BINARY_PARAMS(N,Arg,&& arg)) { \
+    if (e_ == z_) { \
+      if (!reserve_in_place(size() + 1)) { \
+        reserve_with_move(computePushBackCapacity()); \
+      } \
+    } \
+    new (e_) T(BOOST_PP_ENUM(N,JRB_FORWARD,unused)); \
+    ++e_; \
+  } \
+   /**/
 
-  template <class Arg0,class Arg1>
-  void emplace_back(Arg0&& arg0, Arg1&& arg1) {
-    if (e_ == z_) {
-      if (!reserve_in_place(size() + 1)) {
-        reserve_with_move(computePushBackCapacity());
-      }
-    }
-    new (e_) T(std::forward<Args>(arg0),std::forward<Args>(arg1));
-    ++e_;
-  }
+#define BOOST_PP_LOCAL_LIMITS (1, 10)
 
-  template <class Arg0,class Arg1,class Arg2>
-  void emplace_back(Arg0&& arg0, Arg1&& arg1, Arg2&& arg2) {
-    if (e_ == z_) {
-      if (!reserve_in_place(size() + 1)) {
-        reserve_with_move(computePushBackCapacity());
-      }
-    }
-    new (e_) T(std::forward<Args>(arg0),std::forward<Args>(arg1),std::forward<Args>(arg2));
-    ++e_;
-  }
+#include BOOST_PP_LOCAL_ITERATE()
+
+#undef BOOST_PP_LOCAL_LIMITS
+
+#undef BOOST_PP_LOCAL_MACRO
+
 
 
 
@@ -770,6 +764,33 @@ public:
   }
   // template <class... Args>
   // iterator emplace(const_iterator position, Args&&... args);
+  iterator emplace(const_iterator p) { 
+	if(p==cend()) { 
+	emplace_back(); 
+	return end() - 1; 
+	} 
+	return insert(p, value_type()); 
+  }
+
+  #define BOOST_PP_LOCAL_MACRO(N) \
+	template <BOOST_PP_ENUM_PARAMS(N, class Arg)> \
+	iterator emplace(const_iterator p BOOST_PP_ENUM_TRAILING_BINARY_PARAMS(N,Arg,&& arg)) { \
+	if(p==cend()) { \
+	emplace_back(BOOST_PP_ENUM(N,JRB_FORWARD,unused)); \
+	return end() - 1; \
+	} \
+	return insert(p, value_type(BOOST_PP_ENUM(N,JRB_FORWARD,unused))); \
+  }
+   /**/
+
+#define BOOST_PP_LOCAL_LIMITS (1, 10)
+
+#include BOOST_PP_LOCAL_ITERATE()
+
+#undef BOOST_PP_LOCAL_LIMITS
+
+#undef BOOST_PP_LOCAL_MACRO
+
 
   iterator insert(const_iterator position, T x) {
     size_t newSize; // intentionally uninitialized
@@ -979,4 +1000,5 @@ static void compactResize(folly::fbvector<T> * v, size_t size) {
 
 } // namespace folly
 
+#undef  JRB_FORWARD
 #endif // FOLLY_FBVECTOR_H_

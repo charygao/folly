@@ -704,9 +704,17 @@ public:
   //  return insert(p, value_type(std::forward<Args>(args)...));
   //}
   // JRB MOD
+  iterator emplace(const_iterator) { 
+	  if(p==cend()) { 
+		  emplaceBack(); 
+		  return end() - 1; 
+	  } 
+	  return insert(p, value_type()); 
+  }
+
 #define BOOST_PP_LOCAL_MACRO(N) \
 	template <BOOST_PP_ENUM_PARAMS(N, class Arg)> \
-	iterator emplace(const_iterator p,BOOST_PP_ENUM_BINARY_PARAMS(N,Arg,&& arg)) { \
+	iterator emplace(const_iterator p BOOST_PP_ENUM_TRAILING_BINARY_PARAMS(N,Arg,&& arg)) { \
 	if(p==cend()) { \
 	emplaceBack(BOOST_PP_ENUM(N,JRB_FORWARD,unused)); \
 	return end() - 1; \
@@ -754,6 +762,9 @@ public:
   //  emplaceBack(std::forward<Args>(args)...);
   //}
 
+  void emplace_back() { 
+    emplaceBack(); 
+  }
 #define BOOST_PP_LOCAL_MACRO(N) \
 template <BOOST_PP_ENUM_PARAMS(N, class Arg)> \
   void emplace_back(BOOST_PP_ENUM_BINARY_PARAMS(N,Arg,&& arg)) { \
@@ -920,7 +931,11 @@ private:
   //  this->setSize(size() + 1);
   //}
 
-
+	void emplaceBack() { 
+		makeSize(size() + 1); 
+		new (end()) value_type(); 
+		this->setSize(size() + 1); 
+	}
 
 #define BOOST_PP_LOCAL_MACRO(N) \
 template <BOOST_PP_ENUM_PARAMS(N, class Arg)> \
