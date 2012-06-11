@@ -71,6 +71,8 @@ Dependencies
 	*format
 	*fbstring
 
+	for small_vector and fbvector emplace is kinda working but needs to be worked on
+
 	To build make sure folly is in the include directory
 	Make sure you have either built or included double-conversion cpp files
 	Include the following cpp files in your project
@@ -85,5 +87,7 @@ Dependencies
 		Range.cpp
 		String.cpp
 		Unicode.cpp
+
+		
 
 	Any suggestions/bugfixes welcome
