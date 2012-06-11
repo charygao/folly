@@ -13,6 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+// Modified 6/10/2012
+// By John R. Bandela
+// All changes under Apache License 2.0 as above
+// Copyright 2012 John R. Bandela
+// Released under Apache License 2.0
 
 #ifndef FOLLY_BASE_STRING_H_
 #define FOLLY_BASE_STRING_H_
@@ -110,6 +115,9 @@ String cUnescape(StringPiece str, bool strict = true) {
   cUnescape(str, out, strict);
   return out;
 }
+
+
+// VC++ lacks va_copy used to implement these functions so functions disabled
 
 /**
  * stringPrintf is much like printf but deposits its result into a

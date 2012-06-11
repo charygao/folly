@@ -21,6 +21,9 @@
  */
 
 // Modified by John R. Bandela
+// Modified 6/10/2012
+// By John R. Bandela
+// All changes under Apache License 2.0 as above
 #define JRBNOEXCEPT
 
 
@@ -51,6 +54,10 @@
 #include <boost/mpl/max.hpp>
 
 #include "folly/Malloc.h"
+#include <boost/preprocessor.hpp>
+
+#define JRB_FORWARD(z,n,data) std::forward<BOOST_PP_CAT(Arg,n)>(BOOST_PP_CAT(arg,n))
+
 
 #if defined(__GNUC__) && defined(__x86_64__)
 # include "folly/SmallLocks.h"
@@ -697,56 +704,25 @@ public:
   //  return insert(p, value_type(std::forward<Args>(args)...));
   //}
   // JRB MOD
-    template<class Arg0>
-  iterator emplace(const_iterator p, Arg0 arg0) {
-    if (p == cend()) {
-      emplace_back(std::forward<Args>(arg0));
-      return end() - 1;
-    }
-
-    /*
-     * We implement emplace at places other than at the back with a
-     * temporary for exception safety reasons.  It is possible to
-     * avoid having to do this, but it becomes hard to maintain the
-     * basic exception safety guarantee (unless you respond to a copy
-     * constructor throwing by clearing the whole vector).
-     *
-     * The reason for this is that otherwise you have to destruct an
-     * element before constructing this one in its place---if the
-     * constructor throws, you either need a nothrow default
-     * constructor or a nothrow copy/move to get something back in the
-     * "gap", and the vector requirements don't guarantee we have any
-     * of these.  Clearing the whole vector is a legal response in
-     * this situation, but it seems like this implementation is easy
-     * enough and probably better.
-     */
-    return insert(p, value_type(std::forward<Args>(arg0)));
+#define BOOST_PP_LOCAL_MACRO(N) \
+	template <BOOST_PP_ENUM_PARAMS(N, class Arg)> \
+	iterator emplace(const_iterator p,BOOST_PP_ENUM_BINARY_PARAMS(N,Arg,&& arg)) { \
+	if(p==cend()) { \
+	emplaceBack(BOOST_PP_ENUM(N,JRB_FORWARD,unused)); \
+	return end() - 1; \
+	} \
+	return insert(p, value_type(BOOST_PP_ENUM(N,JRB_FORWARD,unused))); \
   }
-    template<class Arg0, class Arg1>
-  iterator emplace(const_iterator p, Arg0 arg0, Arg1 arg1) {
-    if (p == cend()) {
-      emplace_back(std::forward<Args>(arg0,arg1));
-      return end() - 1;
-    }
+   /**/
 
-    /*
-     * We implement emplace at places other than at the back with a
-     * temporary for exception safety reasons.  It is possible to
-     * avoid having to do this, but it becomes hard to maintain the
-     * basic exception safety guarantee (unless you respond to a copy
-     * constructor throwing by clearing the whole vector).
-     *
-     * The reason for this is that otherwise you have to destruct an
-     * element before constructing this one in its place---if the
-     * constructor throws, you either need a nothrow default
-     * constructor or a nothrow copy/move to get something back in the
-     * "gap", and the vector requirements don't guarantee we have any
-     * of these.  Clearing the whole vector is a legal response in
-     * this situation, but it seems like this implementation is easy
-     * enough and probably better.
-     */
-    return insert(p, value_type(std::forward<Args>(arg0,arg1)));
-  }
+#define BOOST_PP_LOCAL_LIMITS (1, 10)
+
+#include BOOST_PP_LOCAL_ITERATE()
+
+#undef BOOST_PP_LOCAL_LIMITS
+
+#undef BOOST_PP_LOCAL_MACRO
+
 
 
   void reserve(size_type sz) {
@@ -778,16 +754,21 @@ public:
   //  emplaceBack(std::forward<Args>(args)...);
   //}
 
-    template<class Arg0>
-  void emplace_back(Arg0&& arg0) {
-    // call helper function for static dispatch of special cases
-    emplaceBack(std::forward<Args>(arg0));
+#define BOOST_PP_LOCAL_MACRO(N) \
+template <BOOST_PP_ENUM_PARAMS(N, class Arg)> \
+  void emplace_back(BOOST_PP_ENUM_BINARY_PARAMS(N,Arg,&& arg)) { \
+    emplaceBack(BOOST_PP_ENUM(N,JRB_FORWARD,unused)); \
   }
-    template<class Arg0,class Arg1>
-  void emplace_back(Arg0&& arg0, Arg1&& arg1) {
-    // call helper function for static dispatch of special cases
-    emplaceBack(std::forward<Args>(arg0,arg1));
-  }
+   /**/
+
+#define BOOST_PP_LOCAL_LIMITS (1, 10)
+
+#include BOOST_PP_LOCAL_ITERATE()
+
+#undef BOOST_PP_LOCAL_LIMITS
+
+#undef BOOST_PP_LOCAL_MACRO
+
 
   void push_back(value_type&& t) {
     if (capacity() == size()) {
@@ -939,18 +920,25 @@ private:
   //  this->setSize(size() + 1);
   //}
 
-	template<class Arg0>
-  void emplaceBack(Arg0&& arg0) {
-    makeSize(size() + 1);
-    new (end()) value_type(std::forward<Args>(arg0));
-    this->setSize(size() + 1);
+
+
+#define BOOST_PP_LOCAL_MACRO(N) \
+template <BOOST_PP_ENUM_PARAMS(N, class Arg)> \
+  void emplaceBack(BOOST_PP_ENUM_BINARY_PARAMS(N,Arg,&& arg)) { \
+    makeSize(size() + 1); \
+    new (end()) value_type(BOOST_PP_ENUM(N,JRB_FORWARD,unused)); \
+    this->setSize(size() + 1); \
   }
-	template<class Arg0,class Arg1>
-  void emplaceBack(Arg0&& arg0,Arg1&& arg1) {
-    makeSize(size() + 1);
-    new (end()) value_type(std::forward<Arg0>(arg0),std::forward<Arg1>(arg1));
-    this->setSize(size() + 1);
-  }
+   /**/
+
+#define BOOST_PP_LOCAL_LIMITS (1, 10)
+
+#include BOOST_PP_LOCAL_ITERATE()
+
+#undef BOOST_PP_LOCAL_LIMITS
+
+#undef BOOST_PP_LOCAL_MACRO
+
 
   /*
    * Special case of emplaceBack for rvalue
@@ -1263,5 +1251,7 @@ void swap(small_vector<T,MaxInline,A,B,C>& a,
 #ifdef FB_PACKED
 # undef FB_PACKED
 #endif
+
+#undef JRB_FORWARD
 
 #endif

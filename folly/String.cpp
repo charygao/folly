@@ -30,7 +30,7 @@
 # define FOLLY_DEMANGLE 1
 #endif
 
-	struct_rallocm rallocm;
+
 
 namespace folly {
 namespace {

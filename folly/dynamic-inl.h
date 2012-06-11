@@ -13,7 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
+// Modified 6/10/2012
+// By John R. Bandela
+// All changes under Apache License 2.0 as above
 #ifndef FOLLY_DYNAMIC_INL_H_
 #define FOLLY_DYNAMIC_INL_H_
 
@@ -24,6 +26,10 @@
 #include "folly/Conv.h"
 #include "folly/Format.h"
 
+
+#ifndef CHECK
+#define CHECK(a) if(!(a))throw std::runtime_error("CHECK failed")
+#endif
 //////////////////////////////////////////////////////////////////////
 
 namespace std {
@@ -174,10 +180,12 @@ struct dynamic::ObjectMaker {
 
   // Make sure no one tries to save one of these into an lvalue with
   // auto or anything like that.
-  ObjectMaker(ObjectMaker&&) = default;
-  ObjectMaker(ObjectMaker const&) = delete;
-  ObjectMaker& operator=(ObjectMaker const&) = delete;
-  ObjectMaker& operator=(ObjectMaker&&) = delete;
+  //ObjectMaker(ObjectMaker&&) = default;
+private:
+  ObjectMaker(ObjectMaker const&);// = delete;
+  ObjectMaker& operator=(ObjectMaker const&) ;//= delete;
+  ObjectMaker& operator=(ObjectMaker&&) ;//= delete;
+public:
 
   // These return rvalue-references instead of lvalue-references to allow
   // constructs like this to moved instead of copied:
@@ -196,10 +204,10 @@ private:
   dynamic val_;
 };
 
-template<class... Args>
-inline dynamic::ObjectMaker dynamic::object(Args&&... args) {
-  return dynamic::ObjectMaker(std::forward<Args>(args)...);
-}
+//template<class... Args>
+//inline dynamic::ObjectMaker dynamic::object(Args&&... args) {
+//  return dynamic::ObjectMaker(std::forward<Args>(args)...);
+//}
 
 //////////////////////////////////////////////////////////////////////
 
@@ -258,11 +266,11 @@ inline dynamic::dynamic(std::string const& s)
   new (&u_.string) fbstring(s);
 }
 
-inline dynamic::dynamic(std::initializer_list<dynamic> il)
-  : type_(ARRAY)
-{
-  new (&u_.array) Array(il.begin(), il.end());
-}
+//inline dynamic::dynamic(std::initializer_list<dynamic> il)
+//  : type_(ARRAY)
+//{
+//  new (&u_.array) Array(il.begin(), il.end());
+//}
 
 inline dynamic::dynamic(ObjectMaker&& maker)
   : type_(OBJECT)
@@ -480,7 +488,8 @@ inline dynamic& dynamic::operator[](dynamic const& k) {
     return at(k);
   }
   auto& obj = get<ObjectImpl>();
-  auto ret = obj.insert({k, nullptr});
+  //auto ret = obj.insert({k, nullptr});
+  auto ret = obj.insert(std::make_pair(k, nullptr));
   return ret.first->second;
 }
 
@@ -708,7 +717,11 @@ template<> struct dynamic::GetAddrImpl<void*> {
   static void** get(Data& d) { return &d.nul; }
 };
 template<> struct dynamic::GetAddrImpl<dynamic::Array> {
-  static Array* get(Data& d) { return &d.array; }
+  static Array* get(Data& d) { //return &d.array; 
+      void* data = &d.array;
+    return static_cast<dynamic::Array*>(data);
+  
+  }
 };
 template<> struct dynamic::GetAddrImpl<bool> {
   static bool* get(Data& d) { return &d.boolean; }
@@ -720,16 +733,31 @@ template<> struct dynamic::GetAddrImpl<double> {
   static double* get(Data& d) { return &d.doubl; }
 };
 template<> struct dynamic::GetAddrImpl<fbstring> {
-  static fbstring* get(Data& d) { return &d.string; }
+	  static_assert(sizeof(fbstring) 
+	  <= sizeof(	std::aligned_storage<
+		sizeof(fbstring),
+		__alignof(fbstring)
+	>::type),
+    "In your implementation, std::unordered_map<> apparently takes different"
+    " amount of space depending on its template parameters.  This is "
+    "weird.  Make objectBuffer bigger if you want to compile dynamic.");
+  static fbstring* get(Data& d) { //return &d.string; 
+        void* data = &d.string;
+    return static_cast<fbstring*>(data);
+  }
 };
 template<> struct dynamic::GetAddrImpl<dynamic::ObjectImpl> {
-  static_assert(sizeof(ObjectImpl) <= sizeof(Data::objectBuffer),
+  static_assert(sizeof(std::unordered_map<dynamic, dynamic>) 
+	  <= sizeof(std::aligned_storage<
+      sizeof(std::unordered_map<int,int>),
+      __alignof(std::unordered_map<int,int>)
+    >::type),
     "In your implementation, std::unordered_map<> apparently takes different"
     " amount of space depending on its template parameters.  This is "
     "weird.  Make objectBuffer bigger if you want to compile dynamic.");
 
   static ObjectImpl* get(Data& d) {
-    void* data = &d.objectBuffer;
+	  void* data = &d.objectBuffer;
     return static_cast<ObjectImpl*>(data);
   }
 };

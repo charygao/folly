@@ -15,7 +15,11 @@
  */
 
 // @author: Andrei Alexandrescu
-
+// Modified 6/10/2012
+// By John R. Bandela
+// All changes under Apache License 2.0 as above
+// Copyright 2012 John R. Bandela
+// Released under Apache License 2.0
 #ifndef FOLLY_BASE_TRAITS_H_
 #define FOLLY_BASE_TRAITS_H_
 
@@ -188,7 +192,7 @@ template <class T> struct IsRelocatable : boost::mpl::not_<boost::is_class<T> >
 //  class shared_ptr;
 //
 //}
-
+// Instead of forward declaring classes in namespace std include the files
 #include<utility>
 #include <string>
 #include<vector>

@@ -161,8 +161,8 @@ template <class T, class Enable=void> class FormatValue;
 //  ValueTuple values_;
 //};
 
-#define BOOST_PP_ITERATION_LIMITS (1,5)
-#define BOOST_PP_FILENAME_1       "C:\Users\JRB.JRB-i5-2300\Documents\Visual Studio 11\Projects\folly-vc11\folly-vc11\formatter_pp.hpp"
+#define BOOST_PP_ITERATION_LIMITS (1,10)
+#define BOOST_PP_FILENAME_1       "folly/formatter_pp.hpp"
 #include BOOST_PP_ITERATE()
 
 #undef BOOST_PP_ITERATION_LIMITS

@@ -14,6 +14,10 @@
  * limitations under the License.
  */
 
+// Modified 6/10/2012
+// By John R. Bandela
+// All changes under Apache License 2.0 as above
+
 #include "folly/dynamic.h"
 
 namespace folly {
@@ -35,6 +39,7 @@ DEF_TYPE(dynamic::ObjectImpl, "object",  dynamic::OBJECT);
 #undef DEF_TYPE
 
 //////////////////////////////////////////////////////////////////////
-
+dynamic::ObjectMaker dynamic::object(){return ObjectMaker();}
+dynamic::ArrayMaker dynamic::array(){return ArrayMaker();}
 }
 

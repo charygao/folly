@@ -44,6 +44,13 @@
 #include "double-conversion.h"   // V8 JavaScript implementation
 #include <boost/preprocessor.hpp>
 
+#ifndef CHECK
+#define CHECK(a) if(!(a))throw std::runtime_error("CHECK failed")
+#endif
+
+// VC++ does not have isnan
+#include <boost/math/special_functions/fpclassify.hpp>
+
 #define FOLLY_RANGE_CHECK(condition, message)                           \
   ((condition) ? (void)0 : throw std::range_error(                      \
     (__FILE__ "(" + std::to_string((long long int) __LINE__) + "): "    \
@@ -711,7 +718,7 @@ to(StringPiece *const src) {
   auto result = conv.StringToDouble(src->data(), src->size(),
                                        &length); // processed char count
 
-  if (!std::isnan(result)) {
+  if (!boost::math::isnan(result)) {
     src->advance(length);
     return result;
   }
@@ -867,4 +874,6 @@ to(const Src & value) {
 #undef FOLLY_RANGE_CHECK
 #endif
 
+
+#undef CHECK
 #endif /* FOLLY_BASE_CONV_H_ */

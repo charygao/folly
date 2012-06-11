@@ -59,6 +59,9 @@
  *
  * @author Jordan DeLong <delong.j@fb.com>
  */
+// Modified 6/10/2012
+// By John R. Bandela
+// All changes under Apache License 2.0 as above
 
 #ifndef FOLLY_DYNAMIC_H_
 #define FOLLY_DYNAMIC_H_
@@ -69,13 +72,19 @@
 #include <utility>
 #include <ostream>
 #include <type_traits>
-#include <initializer_list>
+//#include <initializer_list>
 #include <cstdint>
 #include <boost/operators.hpp>
+#include<boost/preprocessor.hpp>
 
 #include "folly/Traits.h"
 #include "folly/FBVector.h"
 #include "folly/FBString.h"
+
+
+#ifndef CHECK
+#define CHECK(a) if(!(a))throw std::runtime_error("CHECK failed")
+#endif
 
 namespace folly {
 
@@ -132,9 +141,13 @@ public:
    */
 private:
   struct ObjectMaker;
-
+  struct ArrayMaker{};
 public:
-  template<class... Args> static ObjectMaker object(Args&&...);
+ // template<class... Args> static ObjectMaker object(Args&&...);
+
+
+	static ObjectMaker object();
+	static ArrayMaker array();
 
   /*
    * String compatibility constructors.
@@ -147,7 +160,9 @@ public:
    * a new object dynamic.
    */
   /* implicit */ dynamic(ObjectMaker (*)());
-  /* implicit */ dynamic(ObjectMaker const&) = delete;
+private:
+  /* implicit */ dynamic(ObjectMaker const&);// = delete;
+public:
   /* implicit */ dynamic(ObjectMaker&&);
 
   /*
@@ -157,7 +172,14 @@ public:
    *
    *   dynamic v = { 1, 2, 3, "foo" };
    */
-  /* implicit */ dynamic(std::initializer_list<dynamic> il);
+//  /* implicit */ dynamic(std::initializer_list<dynamic> il);
+
+  //intitializer lists not supported by vc11 but we need a way to tell it is array
+  /* implicit */ dynamic(ArrayMaker (*)())  : type_(ARRAY)
+{
+  new (&u_.array) Array();
+}
+
 
   /*
    * Conversion constructors from most of the other types.
@@ -351,8 +373,14 @@ public:
   dynamic
   getDefault(const dynamic& k, const dynamic& v = dynamic::object) const;
   dynamic&& getDefault(const dynamic& k, dynamic&& v) const;
-  template<class K, class V = dynamic>
+
+  // For VC11 have to have another overload
+  template<class K, class V/* = dynamic*/>
   dynamic& setDefault(K&& k, V&& v = dynamic::object);
+
+  template<class K>
+  dynamic& setDefault(K&& k, dynamic&& v = dynamic::object){setDefault<K,dynamic>(std::forward<K>(k),std::forward<dynamic>(v));}
+
 
   /*
    * Resizes an array so it has at n elements, using the supplied
@@ -456,11 +484,19 @@ private:
     // XXX: gcc does an ICE if we use std::nullptr_t instead of void*
     // here.  See http://gcc.gnu.org/bugzilla/show_bug.cgi?id=50361
     void* nul;
-    Array array;
+    //Array array; types with constructors are illegal in unions
+	std::aligned_storage<
+		sizeof(Array),
+		__alignof(Array)
+	>::type array;
     bool boolean;
     double doubl;
     int64_t integer;
-    fbstring string;
+    //fbstring string; types with constructors are illegal in unions
+	std::aligned_storage<
+		sizeof(fbstring),
+		__alignof(fbstring)
+	>::type string;
 
     /*
      * Objects are placement new'd here.  We have to use a char buffer
@@ -469,9 +505,9 @@ private:
      * incomplete type right now).  (Note that in contrast we know it
      * is ok to do this with fbvector because we own it.)
      */
-    typename std::aligned_storage<
+    std::aligned_storage<
       sizeof(std::unordered_map<int,int>),
-      alignof(std::unordered_map<int,int>)
+      __alignof(std::unordered_map<int,int>)
     >::type objectBuffer;
   } u_;
 };
@@ -481,5 +517,5 @@ private:
 }
 
 #include "folly/dynamic-inl.h"
-
+#undef CHECK
 #endif

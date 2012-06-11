@@ -17,6 +17,10 @@
 // @author: Andrei Alexandrescu (aalexandre)
 // String type.
 
+// Modified 6/10/2012
+// By John R. Bandela
+// All changes under Apache License 2.0 as above
+
 #ifndef FOLLY_BASE_FBSTRING_H_
 #define FOLLY_BASE_FBSTRING_H_
 
@@ -989,11 +993,11 @@ public:
   //        0;
   //    })) {
   //}
-
+  // Refactactored out the ternary if else into a private function
   private:
   size_type jrb_assure_nonnull_len(const value_type*s){
 	  if(s){
-		  traits_type::length(s);
+		  return traits_type::length(s);
 	  }else{
 		  basic_fbstring<char> err ;
           err += ": null pointer initializer not valid";
@@ -1892,7 +1896,8 @@ public:
 
   int compare(size_type pos1, size_type n1,
               const value_type* s, size_type n2) const {
-    enforce(pos1 <= size(), std::__throw_out_of_range, "");
+//    enforce(pos1 <= size(), std::__throw_out_of_range, "");
+				  enforce(pos1 <= size(), [](const char* s){throw std::out_of_range(s);}, "");
     procrustes(n1, size() - pos1);
     // The line below fixed by Jean-Francois Bastien, 04-23-2007. Thanks!
     const int r = traits_type::compare(pos1 + data(), s, std::min(n1, n2));

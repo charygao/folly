@@ -16,6 +16,12 @@
 
 // @author Mark Rabkin (mrabkin@fb.com)
 // @author Andrei Alexandrescu (andrei.alexandrescu@fb.com)
+// Modified 6/10/2012
+// By John R. Bandela
+// All changes under Apache License 2.0 as above
+// Copyright 2012 John R. Bandela
+// Released under Apache License 2.0
+
 
 #ifndef FOLLY_RANGE_H_
 #define FOLLY_RANGE_H_
@@ -31,9 +37,16 @@
 //#include <bits/c++config.h>
 #include "folly/Traits.h"
 
+#ifndef CHECK
+#define CHECK(a) if(!(a))throw std::runtime_error("CHECK failed")
+#endif
 
-#define CHECK_LE(a,b) if(!(a<=b))throw std::out_of_range("CHECK_LE failed")
-#define CHECK_GT(a,b) if(!(a>b))throw std::out_of_range("CHECK_GT failed")
+#ifndef CHECK_LE
+#define CHECK_LE(a,b) if(!(a<=b))throw std::runtime_error("CHECK_LE failed")
+#endif
+#ifndef CHECK_GT
+#define CHECK_GT(a,b) if(!(a>b))throw std::runtime_error("CHECK_GT failed")
+#endif
 
 namespace folly {
 
@@ -552,5 +565,10 @@ size_t qfind(const Range<T>& haystack,
 }  // !namespace folly
 
 FOLLY_ASSUME_FBVECTOR_COMPATIBLE_1(folly::Range);
+
+
+#undef CHECK_LE
+#undef CHECK_GT
+#undef CHECK
 
 #endif // FOLLY_RANGE_H_

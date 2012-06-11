@@ -13,7 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
+// Modified 6/10/2012
+// By John R. Bandela
+// All changes under Apache License 2.0 as above
+// Released under Apache License 2.0
 #ifndef FOLLY_FORMATARG_H_
 #define FOLLY_FORMATARG_H_
 
@@ -307,3 +310,4 @@ inline int FormatArg::splitIntKey() {
 
 #endif /* FOLLY_FORMATARG_H_ */
 
+#undef JRB_FORWARD

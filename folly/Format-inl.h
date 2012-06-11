@@ -13,9 +13,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+// Modified 6/10/2012
+// By John R. Bandela
+// All changes under Apache License 2.0 as above
+#include <boost/preprocessor.hpp>
 
-#define CHECK(x) x
-#define DCHECK_GT(x,y)if(!(x>y)) throw std::range_error("DCHECK_GT failed");
+#ifndef CHECK
+#define CHECK(a) if(!(a))throw std::runtime_error("CHECK failed")
+#endif
+
+#ifndef DCHECK_GT
+#ifdef NDEBUG
+#define DCHECK_GT(a,b)
+#else
+#define DCHECK_GT(a,b) if(!(a>b))throw std::runtime_error("DCHECK_GT failed")
+#endif
+#endif
 
 #ifndef FOLLY_FORMAT_H_
 #error This file may only be included from Format.h.
@@ -238,7 +251,7 @@ size_t uintToBinary(char* buffer, size_t bufLen, Uint v) {
 //    doFormat(argIndex, arg, out);
 //  }
 //}
-
+// Moved to formatter_pp.hpp
 namespace format_value {
 
 template <class FormatCallback>
@@ -343,7 +356,7 @@ void formatNumber(StringPiece val, int prefixLen, FormatArg& arg,
 //    }
 //  }
 //}
-
+// Moved to formatter_pp.hpp
 }  // namespace format_value
 
 // Definitions for default FormatValue classes
@@ -1089,9 +1102,15 @@ class FormatValue<std::pair<A, B>> {
 //toAppend(const Formatter<containerMode, Args...>& value, Tgt * result) {
 //  value.appendTo(*result);
 //}
-#include <boost/preprocessor.hpp>
-#define BOOST_PP_ITERATION_LIMITS (1,5)
-#define BOOST_PP_FILENAME_1       "C:\Users\JRB.JRB-i5-2300\Documents\Visual Studio 11\Projects\folly-vc11\folly-vc11\format-inl-pp.hpp"
+
+// Moved above to preprocessor include file for variadic arguments
+#define BOOST_PP_ITERATION_LIMITS (1,10)
+#define BOOST_PP_FILENAME_1       "format-inl-pp.hpp"
 #include BOOST_PP_ITERATE()
 
 }  // namespace folly
+#undef BOOST_PP_ITERATION_LIMITS 
+#undef BOOST_PP_FILENAME_1
+#undef CHECK
+#undef DCHECK_GT
+

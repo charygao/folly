@@ -13,7 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
+// Modified 6/10/2012
+// By John R. Bandela
+// All changes under Apache License 2.0 as above
 #include "folly/json.h"
 #include <cassert>
 #include <boost/next_prior.hpp>
@@ -22,7 +24,10 @@
 #include "folly/Range.h"
 #include "folly/Unicode.h"
 #include "folly/Conv.h"
-
+#include <array>
+#ifndef CHECK
+#define CHECK(a) if(!(a))throw std::runtime_error("CHECK failed")
+#endif
 namespace folly {
 
 //////////////////////////////////////////////////////////////////////
@@ -207,7 +212,7 @@ struct Printer {
       printArray(v);
       break;
     default:
-      CHECK(0) << "Bad type " << v.type();
+      CHECK(0);// << "Bad type " << v.type();
     }
   }
 
@@ -320,10 +325,10 @@ struct Input {
   {
     storeCurrent();
   }
-
-  Input(Input const&) = delete;
-  Input& operator=(Input const&) = delete;
-
+private:
+  Input(Input const&);// = delete;
+  Input& operator=(Input const&);// = delete;
+public:
   char const* begin() const { return range_.begin(); }
 
   // Parse ahead for as long as the supplied predicate is satisfied,
@@ -465,7 +470,8 @@ dynamic parseArray(Input& in) {
   assert(*in == '[');
   ++in;
 
-  dynamic ret = {};
+ // dynamic ret = {};
+  dynamic ret = dynamic::array;
 
   in.skipWhitespace();
   if (*in == ']') {
