@@ -55,3 +55,35 @@ Dependencies
     - glog-devel
     - gflags-devel
     - scons (for double-conversion)
+
+	Modifications by John Bandela for VC++ 11
+
+	Removed initializer_list constructors, assignment, etc
+	Used BOOST_PREPROCESSOR to simulate variadic templates
+	Removed dependence on glog/gflags
+	Generated and custom modified the FormatTables etc
+	Included double conversion files directly in the project
+	Other modifications
+	
+	So far the following compile/seem to work
+	*conversion
+	*dynamic and json
+	*format
+	*fbstring
+
+	To build make sure folly is in the include directory
+	Make sure you have either built or included double-conversion cpp files
+	Include the following cpp files in your project
+		Conv.cpp
+		dynamic.cpp
+		EscapeTables.cpp
+		Format.cpp
+		FormatTables.cpp
+		GroupVarintTables.cpp
+		json.cpp
+		Malloc.cpp
+		Range.cpp
+		String.cpp
+		Unicode.cpp
+
+	Any suggestions/bugfixes welcome
