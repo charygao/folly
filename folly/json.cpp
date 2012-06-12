@@ -453,7 +453,7 @@ dynamic parseObject(Input& in) {
     in.skipWhitespace();
     in.expect(':');
     in.skipWhitespace();
-    ret.insert(std::move(key), parseValue(in));
+    ret.insert(key, parseValue(in));
     in.skipWhitespace();
     if (*in != ',') {
       break;
@@ -480,7 +480,7 @@ dynamic parseArray(Input& in) {
   }
 
   for (;;) {
-    ret.push_back(parseValue(in));
+   ret.push_back(parseValue(in));
     in.skipWhitespace();
     if (*in != ',') {
       break;
@@ -489,7 +489,6 @@ dynamic parseArray(Input& in) {
     in.skipWhitespace();
   }
   in.expect(']');
-
   return ret;
 }
 

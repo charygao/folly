@@ -272,60 +272,86 @@ public:
   typedef std::reverse_iterator<iterator> reverse_iterator;
   typedef std::reverse_iterator<const_iterator> const_reverse_iterator;
 
+private:
+	void default_init(){
+		b_ = 0; e_ = 0; z_ = 0;
+	}
+	void default_init(const size_type n){
+		if (n == 0) {
+			b_ = e_ = z_ = 0;
+			return;
+		}
+
+		auto const nBytes = goodMallocSize(n * sizeof(T));
+		b_ = static_cast<T*>(checkedMalloc(nBytes));
+		fbvector_detail::uninitializedFillDefaultOrFree(b_, n);
+		e_ = b_ + n;
+		z_ = b_ + nBytes / sizeof(T);
+	}
+
+	void default_init(const size_type n, const T& value){
+		if (!n) {
+			b_ = e_ = z_ = 0;
+			return;
+		}
+
+		auto const nBytes = goodMallocSize(n * sizeof(T));
+		b_ = static_cast<T*>(checkedMalloc(nBytes));
+		fbvector_detail::uninitializedFillOrFree(b_, n, value);
+		e_ = b_ + n;
+		z_ = b_ + nBytes / sizeof(T);
+	}
+
+	 template <class InputIteratorOrNum>
+  void default_init( InputIteratorOrNum first, InputIteratorOrNum last) {
+	  	  default_init();
+    assign(first, last);
+  }
+
+public:
 // 23.3.6.1 construct/copy/destroy:
   fbvector() : b_(NULL), e_(NULL), z_(NULL) {}
 
   explicit fbvector(const Allocator&) {
-    new(this) fbvector;
+    //new(this) fbvector;
+	  default_init();
   }
 
   explicit fbvector(const size_type n) {
-    if (n == 0) {
-      b_ = e_ = z_ = 0;
-      return;
-    }
-
-    auto const nBytes = goodMallocSize(n * sizeof(T));
-    b_ = static_cast<T*>(checkedMalloc(nBytes));
-    fbvector_detail::uninitializedFillDefaultOrFree(b_, n);
-    e_ = b_ + n;
-    z_ = b_ + nBytes / sizeof(T);
+   default_init(n);
   }
 
   fbvector(const size_type n, const T& value) {
-    if (!n) {
-      b_ = e_ = z_ = 0;
-      return;
-    }
-
-    auto const nBytes = goodMallocSize(n * sizeof(T));
-    b_ = static_cast<T*>(checkedMalloc(nBytes));
-    fbvector_detail::uninitializedFillOrFree(b_, n, value);
-    e_ = b_ + n;
-    z_ = b_ + nBytes / sizeof(T);
+	  default_init(n,value);
   }
 
   fbvector(const size_type n, const T& value, const Allocator&) {
-    new(this) fbvector(n, value);
+   // new(this) fbvector(n, value);
+	  default_init(n,value);
   }
 
   template <class InputIteratorOrNum>
   fbvector(InputIteratorOrNum first, InputIteratorOrNum last) {
-    new(this) fbvector;
+   // new(this) fbvector;
+	  default_init();
     assign(first, last);
   }
 
   template <class InputIterator>
   fbvector(InputIterator first, InputIterator last,
            const Allocator&) {
-    new(this) fbvector(first, last);
+			   default_init(first,last);
+    //new(this) fbvector(first, last);
   }
 
   fbvector(const fbvector& rhs) {
-    new(this) fbvector(rhs.begin(), rhs.end());
+    //new(this) fbvector(rhs.begin(), rhs.end());
+	  default_init(rhs.begin(), rhs.end());
   }
   fbvector(const fbvector& rhs, const Allocator&) {
-    new(this) fbvector(rhs);
+    //new(this) fbvector(rhs);
+	  	  default_init(rhs.begin(), rhs.end());
+
   }
 
   fbvector(fbvector&& o, const Allocator& = Allocator())

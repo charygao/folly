@@ -98,6 +98,7 @@
     <ClCompile Include="..\..\..\folly\Format.cpp" />
     <ClCompile Include="..\..\..\folly\json.cpp" />
     <ClCompile Include="..\..\..\folly\Malloc.cpp" />
+    <ClCompile Include="..\..\..\folly\Random.cpp" />
     <ClCompile Include="..\..\..\folly\Range.cpp" />
     <ClCompile Include="..\..\..\folly\String.cpp" />
     <ClCompile Include="..\..\..\folly\Unicode.cpp" />

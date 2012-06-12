@@ -16,20 +16,15 @@
 
 #include "folly/Random.h"
 
-#include <unistd.h>
-#include <sys/time.h>
+//#include <unistd.h>
+#include <random>
 
 namespace folly {
 
 uint32_t randomNumberSeed() {
-  struct timeval tv;
-  gettimeofday(&tv, NULL);
-  const uint32_t kPrime1 = 61631;
-  const uint32_t kPrime2 = 64997;
-  const uint32_t kPrime3 = 111857;
-  return kPrime1 * static_cast<uint32_t>(getpid())
-       + kPrime2 * static_cast<uint32_t>(tv.tv_sec)
-       + kPrime3 * static_cast<uint32_t>(tv.tv_usec);
+	std::random_device rnd;
+	return rnd();
+
 }
 
 }

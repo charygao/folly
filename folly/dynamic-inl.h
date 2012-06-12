@@ -181,6 +181,7 @@ struct dynamic::ObjectMaker {
   // Make sure no one tries to save one of these into an lvalue with
   // auto or anything like that.
   //ObjectMaker(ObjectMaker&&) = default;
+  ObjectMaker(ObjectMaker&& other):val_(std::move(other.val_)){}
 private:
   ObjectMaker(ObjectMaker const&);// = delete;
   ObjectMaker& operator=(ObjectMaker const&) ;//= delete;
@@ -257,13 +258,13 @@ inline dynamic::dynamic(ObjectMaker (*)())
 inline dynamic::dynamic(char const* s)
   : type_(STRING)
 {
-  new (&u_.string) fbstring(s);
+  new (getAddress<fbstring>()) fbstring(s);
 }
 
 inline dynamic::dynamic(std::string const& s)
   : type_(STRING)
 {
-  new (&u_.string) fbstring(s);
+  new (getAddress<fbstring>()) fbstring(s);
 }
 
 //inline dynamic::dynamic(std::initializer_list<dynamic> il)
@@ -718,7 +719,7 @@ template<> struct dynamic::GetAddrImpl<void*> {
 };
 template<> struct dynamic::GetAddrImpl<dynamic::Array> {
   static Array* get(Data& d) { //return &d.array; 
-      void* data = &d.array;
+      void* data = &d.arrayBuffer;
     return static_cast<dynamic::Array*>(data);
   
   }
@@ -742,7 +743,7 @@ template<> struct dynamic::GetAddrImpl<fbstring> {
     " amount of space depending on its template parameters.  This is "
     "weird.  Make objectBuffer bigger if you want to compile dynamic.");
   static fbstring* get(Data& d) { //return &d.string; 
-        void* data = &d.string;
+        void* data = &d.stringBuffer;
     return static_cast<fbstring*>(data);
   }
 };

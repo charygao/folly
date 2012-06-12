@@ -81,6 +81,9 @@
 #include "folly/FBVector.h"
 #include "folly/FBString.h"
 
+// For simulating initializer lists
+#include <array>
+
 
 #ifndef CHECK
 #define CHECK(a) if(!(a))throw std::runtime_error("CHECK failed")
@@ -117,7 +120,10 @@ struct dynamic : private boost::operators<dynamic> {
    * Object item iterators dereference as pairs of (key, value).
    */
 private:
-  typedef fbvector<dynamic> Array;
+  //typedef fbvector<dynamic> Array;
+	// fbvector assumes objects are relocatable
+	// the dynamic using std::unordered is not relocatable hence use std::vector
+  typedef std::vector<dynamic> Array;
 public:
   typedef Array::const_iterator const_iterator;
   struct const_key_iterator;
@@ -147,6 +153,8 @@ public:
 
 
 	static ObjectMaker object();
+	template<class T, class U>
+	static ObjectMaker object(T&& t, U&& u){return ObjectMaker(std::forward<T>(t),std::forward<U>(u));}
 	static ArrayMaker array();
 
   /*
@@ -174,10 +182,16 @@ public:
    */
 //  /* implicit */ dynamic(std::initializer_list<dynamic> il);
 
+  // Simulate initializer list with std::array
+  template<size_t Sz>
+  dynamic(const std::array<dynamic,Sz>& il) : type_(ARRAY)
+{
+  new (getAddress<Array>()) Array(il.begin(), il.end());
+}
   //intitializer lists not supported by vc11 but we need a way to tell it is array
   /* implicit */ dynamic(ArrayMaker (*)())  : type_(ARRAY)
 {
-  new (&u_.array) Array();
+  new (getAddress<Array>()) Array();
 }
 
 
@@ -379,7 +393,7 @@ public:
   dynamic& setDefault(K&& k, V&& v = dynamic::object);
 
   template<class K>
-  dynamic& setDefault(K&& k, dynamic&& v = dynamic::object){setDefault<K,dynamic>(std::forward<K>(k),std::forward<dynamic>(v));}
+  dynamic& setDefault(K&& k, dynamic&& v = dynamic(dynamic::object)){return setDefault<K,dynamic>(std::forward<K>(k),std::forward<dynamic>(v));}
 
 
   /*
@@ -453,6 +467,7 @@ public:
   std::size_t hash() const;
 
 private:
+
   friend struct TypeError;
   struct ObjectImpl;
   struct ObjectMaker;
@@ -488,7 +503,7 @@ private:
 	std::aligned_storage<
 		sizeof(Array),
 		__alignof(Array)
-	>::type array;
+	>::type arrayBuffer;
     bool boolean;
     double doubl;
     int64_t integer;
@@ -496,7 +511,7 @@ private:
 	std::aligned_storage<
 		sizeof(fbstring),
 		__alignof(fbstring)
-	>::type string;
+	>::type stringBuffer;
 
     /*
      * Objects are placement new'd here.  We have to use a char buffer
@@ -517,5 +532,7 @@ private:
 }
 
 #include "folly/dynamic-inl.h"
+
+
 #undef CHECK
 #endif
