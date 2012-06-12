@@ -742,7 +742,8 @@ public:
       if (u.hasCapacity()) {
         return *u.getCapacity();
       }
-      return malloc_usable_size(u.pdata_.heap_) / sizeof(value_type);
+ //     return malloc_usable_size(u.pdata_.heap_) / sizeof(value_type);
+      return _msize(u.pdata_.heap_) / sizeof(value_type);
     }
     return MaxInline;
   }
@@ -793,7 +794,9 @@ template <BOOST_PP_ENUM_PARAMS(N, class Arg)> \
   void push_back(value_type const& t) {
     // Make a copy and forward to the rvalue value_type&& overload
     // above.
-    push_back(value_type(t));
+ //   push_back(value_type(t));
+	  // JRB Modification - above will result in recursive c all to self
+    push_back(std::move(value_type(t)));
   }
 
   void pop_back() {
@@ -828,7 +831,9 @@ template <BOOST_PP_ENUM_PARAMS(N, class Arg)> \
   iterator insert(const_iterator p, value_type const& t) {
     // Make a copy and forward to the rvalue value_type&& overload
     // above.
-    return insert(p, value_type(t));
+    //return insert(p, value_type(t));
+	// JRB modification - above recursively calls itself
+    return insert(p, std::move(value_type(t)));
   }
 
   iterator insert(const_iterator pos, size_type n, value_type const& val) {
@@ -1195,7 +1200,7 @@ private:
   static size_t const kHeapifyCapacitySize = sizeof(
     typename std::aligned_storage<
       sizeof(InternalSizeType),
-      alignof(value_type)
+      __alignof(value_type)
     >::type);
   // Threshold to control capacity heapifying.
   static size_t const kHeapifyCapacityThreshold =
