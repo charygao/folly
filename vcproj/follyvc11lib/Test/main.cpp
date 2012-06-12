@@ -884,11 +884,8 @@ int test_main( int argc, char* argv[] ){
 	test_dynamic();
 	test_json();
 
-	std::cout << "Tests finished running... enter number\n";
 
 
-	 int i;
-	 std::cin >> i;
 
 	 return 0;
 
