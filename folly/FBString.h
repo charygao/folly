@@ -1608,6 +1608,7 @@ public:
 	// A replace with s1==s2 is just an erase
 	if(s1==s2){// empty sequence
 		erase(i1,i2);
+		return;
 	}
     if (replaceAliased(i1, i2, s1, s2, &*s1)) {
       return;
