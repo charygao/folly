@@ -1215,12 +1215,14 @@ public:
   }
 
   const_reference at(size_type n) const {
-    enforce(n <= size(), std::__throw_out_of_range, "");
+    //enforce(n <= size(), std::__throw_out_of_range, "");
+	  enforce(n <= size(), [](const char* s){throw std::out_of_range(s);}, "");
     return (*this)[n];
   }
 
   reference at(size_type n) {
-    enforce(n < size(), std::__throw_out_of_range, "");
+    //enforce(n < size(), std::__throw_out_of_range, "");
+    enforce(n < size(),[](const char* s){throw std::out_of_range(s);}, "");
     return (*this)[n];
   }
 
@@ -1250,7 +1252,7 @@ public:
   basic_fbstring& append(const basic_fbstring& str, const size_type pos,
                          size_type n) {
     const size_type sz = str.size();
-    enforce(pos <= sz, std::__throw_out_of_range, "");
+    enforce(pos <= sz, [](const char* s){throw std::out_of_range(s);}, "");
     procrustes(n, sz - pos);
     return append(str.data() + pos, n);
   }
@@ -1303,7 +1305,7 @@ public:
   basic_fbstring& assign(const basic_fbstring& str, const size_type pos,
                          size_type n) {
     const size_type sz = str.size();
-    enforce(pos <= sz, std::__throw_out_of_range, "");
+    enforce(pos <= sz, [](const char* s){throw std::out_of_range(s);}, "");
     procrustes(n, sz - pos);
     return assign(str.data() + pos, n);
   }
@@ -1341,13 +1343,13 @@ public:
 
   basic_fbstring& insert(size_type pos1, const basic_fbstring& str,
                          size_type pos2, size_type n) {
-    enforce(pos2 <= str.length(), std::__throw_out_of_range, "");
+    enforce(pos2 <= str.length(), [](const char* s){throw std::out_of_range(s);}, "");
     procrustes(n, str.length() - pos2);
     return insert(pos1, str.data() + pos2, n);
   }
 
   basic_fbstring& insert(size_type pos, const value_type* s, size_type n) {
-    enforce(pos <= length(), std::__throw_out_of_range, "");
+    enforce(pos <= length(), [](const char* s){throw std::out_of_range(s);}, "");
     insert(begin() + pos, s, s + n);
     return *this;
   }
@@ -1357,7 +1359,7 @@ public:
   }
 
   basic_fbstring& insert(size_type pos, size_type n, value_type c) {
-    enforce(pos <= length(), std::__throw_out_of_range, "");
+    enforce(pos <= length(), [](const char* s){throw std::out_of_range(s);}, "");
     insert(begin() + pos, n, c);
     return *this;
   }
@@ -1468,7 +1470,7 @@ public:
   basic_fbstring& erase(size_type pos = 0, size_type n = npos) {
     Invariant checker(*this);
     (void) checker;
-    enforce(pos <= length(), std::__throw_out_of_range, "");
+    enforce(pos <= length(), [](const char* s){throw std::out_of_range(s);}, "");
     procrustes(n, length() - pos);
     std::copy(begin() + pos + n, end(), begin() + pos);
     resize(length() - n);
@@ -1477,7 +1479,7 @@ public:
 
   iterator erase(iterator position) {
     const size_type pos(position - begin());
-    enforce(pos <= size(), std::__throw_out_of_range, "");
+    enforce(pos <= size(), [](const char* s){throw std::out_of_range(s);}, "");
     erase(pos, 1);
     return begin() + pos;
   }
@@ -1500,7 +1502,7 @@ public:
   basic_fbstring& replace(size_type pos1, size_type n1,
                           const basic_fbstring& str,
                           size_type pos2, size_type n2) {
-    enforce(pos2 <= str.length(), std::__throw_out_of_range, "");
+    enforce(pos2 <= str.length(), [](const char* s){throw std::out_of_range(s);}, "");
     return replace(pos1, n1, str.data() + pos2,
                    std::min(n2, str.size() - pos2));
   }
@@ -1522,7 +1524,7 @@ public:
                           StrOrLength s_or_n2, NumOrChar n_or_c) {
     Invariant checker(*this);
     (void) checker;
-    enforce(pos <= size(), std::__throw_out_of_range, "");
+    enforce(pos <= size(), [](const char* s){throw std::out_of_range(s);}, "");
     procrustes(n1, length() - pos);
     const iterator b = begin() + pos;
     return replace(b, b + n1, s_or_n2, n_or_c);
@@ -1601,6 +1603,12 @@ public:
     (void) checker;
 
     // Handle aliased replace
+	//Modified by JRB 612/12, Note if s1,s2 denotes empty sequence then dereferencing s1 is an error
+	// This can be  reproduced by calling assign with empty sequence
+	// A replace with s1==s2 is just an erase
+	if(s1==s2){// empty sequence
+		erase(i1,i2);
+	}
     if (replaceAliased(i1, i2, s1, s2, &*s1)) {
       return;
     }
@@ -1644,7 +1652,7 @@ public:
   }
 
   size_type copy(value_type* s, size_type n, size_type pos = 0) const {
-    enforce(pos <= size(), std::__throw_out_of_range, "");
+    enforce(pos <= size(), [](const char* s){throw std::out_of_range(s);}, "");
     procrustes(n, size() - pos);
 
     fbstring_detail::pod_copy(
@@ -1875,7 +1883,7 @@ public:
   }
 
   basic_fbstring substr(size_type pos = 0, size_type n = npos) const {
-    enforce(pos <= size(), std::__throw_out_of_range, "");
+    enforce(pos <= size(), [](const char* s){throw std::out_of_range(s);}, "");
     return basic_fbstring(data() + pos, std::min(n, size() - pos));
   }
 
@@ -1907,7 +1915,7 @@ public:
   int compare(size_type pos1, size_type n1,
               const basic_fbstring& str,
               size_type pos2, size_type n2) const {
-    enforce(pos2 <= str.size(), std::__throw_out_of_range, "");
+    enforce(pos2 <= str.size(), [](const char* s){throw std::out_of_range(s);}, "");
     return compare(pos1, n1, str.data() + pos2,
                    std::min(n2, str.size() - pos2));
   }
@@ -2156,7 +2164,7 @@ std::basic_istream<
                         __istream_type;
   typedef typename __istream_type::ios_base __ios_base;
   size_t extracted = 0;
-  auto err = __ios_base::goodbit;
+  auto err = (unsigned int)__ios_base::goodbit;
   if (sentry) {
     auto n = is.width();
     if (n == 0) {
@@ -2170,12 +2178,12 @@ std::basic_istream<
       got = is.rdbuf()->snextc();
     }
     if (got == T::eof()) {
-      err |= __ios_base::eofbit;
+      err |= (int)__ios_base::eofbit;
       is.width(0);
     }
   }
   if (!extracted) {
-    err |= __ios_base::failbit;
+    err |= (int)__ios_base::failbit;
   }
   if (err) {
     is.setstate(err);
