@@ -77,6 +77,13 @@ template<> folly::fbstring randomObject<folly::fbstring>() {
 //std::string fstr(StringPiece fmt, Args&&... args) {
 //  return format(fmt, std::forward<Args>(args)...).str();
 //}
+std::string fstr(StringPiece fmt) { 
+  return fmt.toString(); 
+}
+
+std::string vstr(StringPiece fmt) { 
+  return fmt.toString(); 
+}
 #define BOOST_PP_LOCAL_MACRO(N) \
 template <BOOST_PP_ENUM_PARAMS(N, class Arg)> \
 std::string fstr(StringPiece fmt BOOST_PP_ENUM_TRAILING_BINARY_PARAMS(N,Arg,&& arg)) { \
@@ -751,15 +758,9 @@ using folly::toJson;
   EXPECT_ANY_THROW(folly::json::serialize("a\xe0\xa0\x80z\xe0\x80\x80", opts));
 }
 }
-int test_main( int argc, char* argv[] ){
 
-
-	test_fbvector();
-	test_dynamic();
-	test_json();
-
-	std:: string sj = folly::format("Hello {0}",5).str();;
-	  //BOOST_CHECK("hello"== fstr("hello"));
+void check_format(){
+	  BOOST_CHECK("hello"== fstr("hello"));
   BOOST_CHECK("42"== fstr("{}", 42));
   BOOST_CHECK("42 42"== fstr("{0} {0}", 42));
   BOOST_CHECK("00042  23   42"== fstr("{0:05} {1:3} {0:4}", 42, 23));
@@ -873,6 +874,15 @@ int test_main( int argc, char* argv[] ){
   BOOST_CHECK("0.01"== fstr("{:.2f}", 0.01));
   BOOST_CHECK("0.00"== fstr("{:.2f}", 0.001));
 
+}
+int test_main( int argc, char* argv[] ){
+
+
+	test_fbvector();
+	test_dynamic();
+	test_json();
+
+	std::cout << "Tests finished running... enter number\n";
 
 
 	 int i;
