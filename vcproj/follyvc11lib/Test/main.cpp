@@ -760,7 +760,7 @@ using folly::toJson;
 }
 
 void check_format(){
-	  BOOST_CHECK("hello"== fstr("hello"));
+	  BOOST_CHECK("hello"== format("hello").str());
   BOOST_CHECK("42"== fstr("{}", 42));
   BOOST_CHECK("42 42"== fstr("{0} {0}", 42));
   BOOST_CHECK("00042  23   42"== fstr("{0:05} {1:3} {0:4}", 42, 23));

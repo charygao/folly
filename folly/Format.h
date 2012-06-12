@@ -49,10 +49,58 @@ template <bool containerMode, class Arg0, class Arg1, class Arg2> class Formatte
 template <bool containerMode, class Arg0, class Arg1, class Arg2, class Arg3> class Formatter4;
 template <bool containerMode, class Arg0, class Arg1, class Arg2, class Arg3, class Arg4> class Formatter5;
 
+class Formatter0;
 
 
 //template <class... Args>
 //Formatter<false, Args...> format(StringPiece fmt, Args&&... args);
+Formatter0 format(StringPiece fmt);
+class Formatter0 {
+  friend Formatter0 format(StringPiece fmt);
+ public:
+
+
+  /**
+   * Conversion to string
+   */
+  std::string str() const {
+    return str_.toStdString();
+  }
+
+  /**
+   * Conversion to fbstring
+   */
+  fbstring fbstr() const {
+    return str_;
+  }
+
+ private:
+  explicit Formatter0(StringPiece str):str_(str.begin(),str.end()){}
+
+  // Not copyable
+  Formatter0(const Formatter0&);
+  Formatter0& operator=(const Formatter0&);
+
+  // Movable, but the move constructor and assignment operator are private,
+  // for the exclusive use of format() (below).  This way, you can't create
+  // a Formatter object, but can handle references to it (for streaming,
+  // conversion to string, etc) -- which is good, as Formatter objects are
+  // dangerous (they hold references, possibly to temporaries)
+  Formatter0(Formatter0&& other):str_(std::move(other.str_)){}
+  Formatter0& operator=(Formatter0&& other){str_ = std::move(other.str_); return *this;};
+
+
+
+
+
+  fbstring str_;
+
+public:
+	friend std::ostream& operator << (std::ostream& os, const Formatter0& f){os << f.str_;}
+
+};
+
+inline Formatter0 format(StringPiece fmt){return Formatter0(fmt);}
 
 template <class Arg0>
 Formatter1<false, Arg0> format(StringPiece fmt, Arg0&& arg0);
